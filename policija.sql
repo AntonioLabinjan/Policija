@@ -1,0 +1,143 @@
+DROP DATABASE IF EXISTS Policija;
+CREATE DATABASE Policija;
+USE Policija;
+
+#PREIMENOVAT PRIMARY KEYEVE U SVIMA TABLICAMA SAMO U ID
+CREATE TABLE Osoba (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ImePrezime VARCHAR(255) NOT NULL,
+    DatumRodjenja DATE NOT NULL,
+    Spol VARCHAR(10) NOT NULL,
+    Adresa VARCHAR(255) NOT NULL,
+    Fotografija BLOB,
+    Telefon VARCHAR(20) NOT NULL,
+    Email VARCHAR(255) NOT NULL UNIQUE,
+    NadređeniID INT FOREIGN KEY REFERENCES Osoba(ID)
+);
+
+CREATE TABLE Uloge (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    TipUloge VARCHAR(255) NOT NULL,
+    DodatneInformacije TEXT
+);
+
+CREATE TABLE Odjeli (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL UNIQUE,
+    Opis TEXT
+);
+
+
+CREATE TABLE Osoba_s_ulogom (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    OsobaID INT,
+    UlogaID INT,
+    OdjelID INT,
+    FOREIGN KEY (OsobaID) REFERENCES Osoba(ID),
+    FOREIGN KEY (UlogaID) REFERENCES Uloge(ID),
+    FOREIGN KEY (OdjelID) REFERENCES Odjeli(ID)
+);
+
+CREATE TABLE Vozilo (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Marka VARCHAR(255) NOT NULL,
+    Model VARCHAR(255) NOT NULL,
+    Registracija VARCHAR(20) NOT NULL UNIQUE,
+    GodinaProizvodnje INT NOT NULL,
+    VlasnikID INT,
+    FOREIGN KEY (VlasnikID) REFERENCES Osoba(ID)
+);
+
+CREATE TABLE PodrucjeUprave (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL UNIQUE,
+    Zupanija VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Mjesto (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL,
+    IDPodrucjeUprave INT,
+    FOREIGN KEY (IDPodrucjeUprave) REFERENCES PodrucjeUprave(ID)
+);
+
+CREATE TABLE Predmet (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL,
+    IDMjestoPronalaska INT,
+    FOREIGN KEY (IDMjestoPronalaska) REFERENCES Mjesto(ID)
+);
+
+CREATE TABLE Slucaj (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL,
+    Opis TEXT,
+    Pocetak DATETIME NOT NULL,
+    Zavrsetak DATETIME NOT NULL,
+    Status VARCHAR(20),
+    IzvjestiteljID INT,
+    VoditeljID INT,
+    DokazID INT,
+    FOREIGN KEY (IzvjestiteljID) REFERENCES Osoba(ID),
+    FOREIGN KEY (VoditeljID) REFERENCES Osoba(ID),
+    FOREIGN KEY (DokazID) REFERENCES Predmet(ID)
+);
+
+CREATE TABLE EvidencijaDogadjaja (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    SlucajID INT,
+    OsumnjicenikID INT,
+    OpisDogadjaja TEXT NOT NULL,
+    DatumVrijeme DATETIME NOT NULL,
+    Lokacija VARCHAR(255) NOT NULL,
+    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID),
+    FOREIGN KEY (OsumnjicenikID) REFERENCES Osoba(ID)
+);
+
+CREATE TABLE KaznenaDjela (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL UNIQUE,
+    Opis TEXT NOT NULL
+);
+
+CREATE TABLE KaznenoDjelo_u_Slucaju (
+    SlucajID INT,
+    KaznenoDjeloID INT,
+    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID),
+    FOREIGN KEY (KaznenoDjeloID) REFERENCES KaznenaDjela(ID)
+);
+
+
+CREATE TABLE VrstaZgrade (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    OpisVrste VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE Zgrada (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Adresa VARCHAR(255) NOT NULL,
+    MjestoID INT,
+    VrstaZgradeID INT,
+    FOREIGN KEY (MjestoID) REFERENCES Mjesto(ID),
+    FOREIGN KEY (VrstaZgradeID) REFERENCES VrstaZgrade(ID)
+);
+
+CREATE TABLE Izvjestaji (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Naslov VARCHAR(255) NOT NULL,
+    Sadržaj TEXT,
+    AutorID INT,
+    SlucajID INT,
+    FOREIGN KEY (AutorID) REFERENCES Osoba(ID),
+    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID)
+);
+
+CREATE TABLE Zapljene (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Opis TEXT,
+    SlucajID INT,
+    PredmetID INT,
+    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID),
+    FOREIGN KEY (PredmetID) REFERENCES Predmet(ID)
+);
+# Dokazi, odjeli itd...

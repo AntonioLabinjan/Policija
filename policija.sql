@@ -171,3 +171,115 @@ CREATE TABLE Sui_slucaj (
     FOREIGN KEY (Id_sui) REFERENCES Sredstvo_utvrdivanja_istine (Id),
     FOREIGN KEY (Id_slucaj) REFERENCES Slucaj (Id)
 );
+# TRIGERI
+DELIMITER //
+CREATE TRIGGER AzurirajVrijednostZapljena
+AFTER INSERT ON Zapljene
+FOR EACH ROW
+BEGIN
+    DECLARE ukupno DECIMAL(10, 2);
+    
+    SELECT SUM(P.Vrijednost) INTO ukupno
+    FROM Predmet P
+    WHERE P.ID = NEW.PredmetID;
+
+    UPDATE Slucaj
+    SET UkupnaVrijednostZapljena = ukupno
+    WHERE ID = NEW.SlucajID;
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER PremjestiZavrseneSlucajeve
+AFTER UPDATE ON Slucaj
+FOR EACH ROW
+BEGIN
+    IF NEW.Status = 'Završeno' THEN
+        INSERT INTO Arhiva (SlucajID) VALUES (OLD.ID);
+        DELETE FROM Slucaj WHERE ID = OLD.ID;
+    END IF;
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER ProvjeraHijerarhije
+BEFORE INSERT ON Osoba
+FOR EACH ROW
+BEGIN
+    IF NEW.NadređeniID IS NOT NULL AND NEW.NadređeniID = NEW.ID THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Nadređeni ne može biti ista osoba kao i podređeni.';
+    END IF;
+END;
+//
+DELIMITER ;
+
+# UPITI
+# Ispišimo sve voditelje slučajeva
+SELECT O.ImePrezime, S.Naziv AS 'Naziv slučaja'
+FROM Osoba O
+JOIN Slucaj S ON O.ID = S.VoditeljID;
+
+# Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
+SELECT S.Naziv AS 'Naziv slučaja', ED.OpisDogadjaja, ED.DatumVrijeme, ED.Lokacija
+FROM Slucaj S
+JOIN EvidencijaDogadjaja ED ON S.ID = ED.SlucajID
+WHERE ED.OsumnjicenikID = (SELECT ID FROM Osoba WHERE ImePrezime = 'Ime Prezime');
+
+# Ispišimo sve osobe koje su osumnjičene za neko KD
+SELECT DISTINCT O.ImePrezime
+FROM Osoba O
+JOIN EvidencijaDogadjaja ED ON O.ID = ED.OsumnjicenikID
+JOIN KaznenoDjelo_u_Slucaju KD ON ED.SlucajID = KD.SlucajID
+JOIN KaznenaDjela K ON KD.KaznenoDjeloID = K.ID
+WHERE K.Naziv = 'Naziv kaznenog djela';
+
+# Pronađimo sve slučajeve koji sadrže KD i nisu riješeni
+SELECT Slucaj.Naziv, KaznenaDjela.Naziv AS KaznenoDjelo
+FROM Slucaj
+INNER JOIN KaznenoDjelo_u_Slucaju ON Slucaj.ID = KaznenoDjelo_u_Slucaju.SlucajID
+INNER JOIN KaznenaDjela ON KaznenoDjelo_u_Slucaju.KaznenoDjeloID = KaznenaDjela.ID
+WHERE Slucaj.Status = 'Aktivan';
+
+# Izračunajmo iznos zapljene za svaki pojedini slučaj
+SELECT Slucaj.Naziv, SUM(Zapljene.Vrijednost) AS UkupnaVrijednostZapljena
+FROM Slucaj
+LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.SlucajID
+GROUP BY Slucaj.ID;
+
+# Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska)
+SELECT K.Naziv, K.Opis
+FROM KaznjivaDjela_u_Slucaju KS
+JOIN KaznjivaDjela K ON KS.KaznjivoDjeloID = K.ID
+JOIN Slucaj S ON KS.SlucajID = S.Id
+WHERE S.Id_Mjesto_Pronalaska = 1; # ovaj id promijenimo ovisno koje nam mjesto treba; moremo ih dohvaćat i preko imena ako nan se da
+
+# Nađimo  sve događaje koji uključuju pojedino kažnjivo djelo
+SELECT E.OpisDogadjaja, E.DatumVrijeme
+FROM EvidencijaDogadaja E
+JOIN Slucaj S ON E.SlucajID = S.Id
+JOIN KaznjivaDjela_u_Slucaju KS ON S.Id = KS.SlucajID
+WHERE KS.KaznjivoDjeloID = 1;
+
+# Pronađi prosječnu vrijednost zapljene za pojedina kaznena djela
+SELECT K.Naziv AS VrstaKaznenogDjela, AVG(Z.Vrijednost) AS ProsječnaVrijednostZapljene
+FROM KaznjivaDjela_u_Slucaju KS
+JOIN KaznjivaDjela K ON KS.KaznjivoDjeloID = K.ID
+JOIN Zapljene Z ON KS.SlucajID = Z.SlucajID
+GROUP BY K.Naziv;
+
+# Pronađi sve odjele i broj zaposlenika na njima
+SELECT O.Odjel_id, Odjeli.Naziv AS NazivOdjela, COUNT(O.Id) AS BrojZaposlenika
+FROM Osoba O
+JOIN Odjeli ON O.Odjel_id = Odjeli.Id
+GROUP BY O.Odjel_id;
+
+# Pronađi ukupnu vrijednost zapljena po odjelu i sortiraj ih po vrijednosti silazno
+SELECT O.Odjel_id, SUM(Z.Vrijednost) AS UkupnaVrijednostZapljena
+FROM Osoba O
+JOIN Slucaj S ON O.Id = S.VoditeljID
+JOIN Zapljene Z ON S.Id = Z.SlucajID
+GROUP BY O.Odjel_id
+ORDER BY UkupnaVrijednostZapljena DESC;

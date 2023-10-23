@@ -414,24 +414,19 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE Godisnje_nagrađivanje_pasa()
 BEGIN
-    -- Kreiraj privremenu tablicu
     CREATE TEMPORARY TABLE Temp_Psi (PasID INT, BrojSlucajeva INT);
 
-    -- Izračunaj broj slučajeva za svakog psa
     INSERT INTO Temp_Psi (PasID, BrojSlucajeva)
     SELECT Pas_id, COUNT(*) AS BrojSlucajeva
     FROM Slucaj
     GROUP BY Pas_id;
 
-    -- Dodaj novi stupac "Status" u tablicu "Pas" i označi "nagrađene pse"
     ALTER TABLE Pas ADD COLUMN Status VARCHAR(255);
 
-    -- Postavi "nagrađeni pas" za pse koji su radili na više od 15 slučajeva
     UPDATE Pas
     SET Status = 'nagrađeni pas'
     WHERE Id IN (SELECT PasID FROM Temp_Psi WHERE BrojSlucajeva > 15);
     
-    -- Obriši privremenu tablicu
     DROP TEMPORARY TABLE Temp_Psi;
 END //
 DELIMITER ;
@@ -441,10 +436,8 @@ DELIMITER //
 
 CREATE PROCEDURE IzracunajProsjecnoTrajanjePoOdjelu()
 BEGIN
-    -- Kreiraj privremenu tablicu za pohranu prosječnog trajanja po odjelu
     CREATE TEMPORARY TABLE Temp_ProsjecnoTrajanje (OdjelID INT, ProsjecnoTrajanje DECIMAL(10, 2));
 
-    -- Izračunaj prosječno trajanje za svaki odjel
     INSERT INTO Temp_ProsjecnoTrajanje (OdjelID, ProsjecnoTrajanje)
     SELECT O.Id AS OdjelID, AVG(DATEDIFF(S.Zavrsetak, S.Pocetak)) AS ProsjecnoTrajanje
     FROM Odjeli O
@@ -453,12 +446,10 @@ BEGIN
     WHERE S.Osoba_id IS NOT NULL
     GROUP BY O.Id;
 
-    -- Ispis prosječnog trajanja po odjelu
     SELECT O.Naziv AS 'Naziv odjela', T.ProsjecnoTrajanje AS 'Prosjecno trajanje (u danima)'
     FROM Odjeli O
     LEFT JOIN Temp_ProsjecnoTrajanje T ON O.Id = T.OdjelID;
 
-    -- Obriši privremenu tablicu
     DROP TEMPORARY TABLE Temp_ProsjecnoTrajanje;
 END //
 
@@ -467,3 +458,9 @@ DELIMITER ;
 
 CALL IzracunajProsjecnoTrajanjePoOdjelu();
 
+KILLCOUNT: 
+18 tablica (15 minimum)
+4 trigera (ne piše broj, ali vjerojatno je 10 minimum)
+10 upita (15 minimum)
+4 pogleda ( 5 minimum)
+4 procedure (10 minimum)

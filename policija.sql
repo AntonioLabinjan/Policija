@@ -459,8 +459,8 @@ DELIMITER ;
 CALL IzracunajProsjecnoTrajanjePoOdjelu();
 
 KILLCOUNT: 
-18 tablica (15 minimum)
-4 trigera (ne piše broj, ali vjerojatno je 10 minimum)
-10 upita (15 minimum)
-4 pogleda ( 5 minimum)
-4 procedure (10 minimum)
+18 tablica (15 minimum) -> 120%
+4 trigera (ne piše broj, ali vjerojatno je 10 minimum) -> 40%
+10 upita (15 minimum) -> 67%
+4 pogleda ( 5 minimum) -> 80%
+4 procedure (10 minimum) -> 40%

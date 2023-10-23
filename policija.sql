@@ -435,3 +435,35 @@ BEGIN
     DROP TEMPORARY TABLE Temp_Psi;
 END //
 DELIMITER ;
+DROP PROCEDURE IzracunajProsjecnoTrajanjePoOdjelu;
+# Napiši proceduru koja će računati prosječno trajanje slučaja po odjelu
+DELIMITER //
+
+CREATE PROCEDURE IzracunajProsjecnoTrajanjePoOdjelu()
+BEGIN
+    -- Kreiraj privremenu tablicu za pohranu prosječnog trajanja po odjelu
+    CREATE TEMPORARY TABLE Temp_ProsjecnoTrajanje (OdjelID INT, ProsjecnoTrajanje DECIMAL(10, 2));
+
+    -- Izračunaj prosječno trajanje za svaki odjel
+    INSERT INTO Temp_ProsjecnoTrajanje (OdjelID, ProsjecnoTrajanje)
+    SELECT O.Id AS OdjelID, AVG(DATEDIFF(S.Zavrsetak, S.Pocetak)) AS ProsjecnoTrajanje
+    FROM Odjeli O
+    LEFT JOIN Osoba Os ON O.Id = Os.Odjel_id
+    LEFT JOIN Slucaj S ON Os.Id = S.Osoba_id
+    WHERE S.Osoba_id IS NOT NULL
+    GROUP BY O.Id;
+
+    -- Ispis prosječnog trajanja po odjelu
+    SELECT O.Naziv AS 'Naziv odjela', T.ProsjecnoTrajanje AS 'Prosjecno trajanje (u danima)'
+    FROM Odjeli O
+    LEFT JOIN Temp_ProsjecnoTrajanje T ON O.Id = T.OdjelID;
+
+    -- Obriši privremenu tablicu
+    DROP TEMPORARY TABLE Temp_ProsjecnoTrajanje;
+END //
+
+DELIMITER ;
+
+
+CALL IzracunajProsjecnoTrajanjePoOdjelu();
+

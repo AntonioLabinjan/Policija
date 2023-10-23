@@ -171,7 +171,10 @@ CREATE TABLE Sui_slucaj (
     FOREIGN KEY (Id_sui) REFERENCES Sredstvo_utvrdivanja_istine (Id),
     FOREIGN KEY (Id_slucaj) REFERENCES Slucaj (Id)
 );
+
+
 # TRIGERI
+# Triger koji kreira stupac UkupnaVrijednostZapljena u tablici slučaj i ažurira ga nakon svake nove unesene zapljene u tom slučaju
 DELIMITER //
 CREATE TRIGGER AzurirajVrijednostZapljena
 AFTER INSERT ON Zapljene
@@ -190,6 +193,7 @@ END;
 //
 DELIMITER ;
 
+# Triger koji premješta završene slučajeve iz tablice slučaj u tablicu arhiva
 DELIMITER //
 CREATE TRIGGER PremjestiZavrseneSlucajeve
 AFTER UPDATE ON Slucaj
@@ -203,6 +207,7 @@ END;
 //
 DELIMITER ;
 
+# Provjera da osoba nije nadređena sama sebi
 DELIMITER //
 CREATE TRIGGER ProvjeraHijerarhije
 BEFORE INSERT ON Osoba
@@ -211,6 +216,21 @@ BEGIN
     IF NEW.NadređeniID IS NOT NULL AND NEW.NadređeniID = NEW.ID THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Nadređeni ne može biti ista osoba kao i podređeni.';
+    END IF;
+END;
+//
+DELIMITER ;
+
+# Provjera da su datum početka i završetka slučaja različiti i da je datum završetka "veći" od datuma početka
+DELIMITER //
+
+CREATE TRIGGER ProvjeraDatumZavrsetka
+BEFORE INSERT ON Slucaj
+FOR EACH ROW
+BEGIN
+    IF NEW.Pocetak >= NEW.Zavrsetak THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Datum završetka slučaja mora biti veći od datuma početka.';
     END IF;
 END;
 //
@@ -283,3 +303,121 @@ JOIN Slucaj S ON O.Id = S.VoditeljID
 JOIN Zapljene Z ON S.Id = Z.SlucajID
 GROUP BY O.Odjel_id
 ORDER BY UkupnaVrijednostZapljena DESC;
+
+# POGLEDI
+# Pronađi sve policajce koji su vlasnici vozila koja su starija od 10 godina
+CREATE VIEW PolicijskiSluzbeniciSaStarimVozilima AS
+SELECT O.Id, O.Ime_Prezime, V.Marka, V.Model, V.Godina_proizvodnje
+FROM Osoba O
+JOIN Vozilo V ON O.Id = V.Vlasnik_id
+WHERE O.Radno_mjesto_id = (SELECT Id FROM Radno_mjesto WHERE Vrsta = 'Policijski službenik')
+AND YEAR(NOW()) - V.Godina_proizvodnje > 10;
+
+# Napravi pogled koji će pronaći sve osobe koje su počinile kazneno djelo pljačke i pri tome su koristili pištolj (to dohvati pomoću tablice predmet) i nazovi pogled "Počinitelji oružane pljačke"
+CREATE VIEW PočiniteljiOružanePljačke AS
+SELECT O.Id, O.Ime_Prezime, K.Naziv AS 'KaznenoDjelo', P.Naziv AS 'Predmet'
+FROM Osoba O
+JOIN EvidencijaDogadaja ED ON O.Id = ED.OsumnjicenikID
+JOIN KaznjivaDjela_u_Slucaju KS ON ED.SlucajID = KS.SlucajID
+JOIN KaznjivaDjela K ON KS.KaznjivoDjeloID = K.ID
+JOIN Predmet P ON ED.MjestoId = P.Id_Mjesto_Pronalaska
+WHERE K.Naziv = 'Pljačka' AND P.Naziv = 'Pištolj';
+
+#Napravi pogled koji će izlistati sva evidentirana kaznena djela i njihov postotak pojavljivanja u slučajevima
+CREATE VIEW PostotakPojavljivanjaKaznenihDjela AS
+SELECT
+    KD.Naziv AS 'Kazneno_Djelo',
+    COUNT(KS.SlucajID) AS 'Broj_Slucajeva',
+    COUNT(KS.SlucajID) / (SELECT COUNT(*) FROM Slucaj) * 100 AS 'Postotak_Pojavljivanja'
+FROM
+    KaznjivaDjela KD
+LEFT JOIN
+    KaznjivaDjela_u_Slucaju KS
+ON
+    KD.ID = KS.KaznjivoDjeloID
+GROUP BY
+    KD.Naziv;
+
+# Napravi pogled koji će izlistati sva evidentirana sredstva utvrđivanja istine i broj slučajeva u kojima je svako od njih korišteno
+CREATE VIEW EvidentiranaSredstvaUtvrdivanjaIstine AS
+SELECT Sredstvo_utvrdivanja_istine.Naziv AS 'SredstvoUtvrdivanjaIstine',
+       COUNT(Sui_slucaj.Id_sui) AS 'BrojSlucajeva'
+FROM Sredstvo_utvrdivanja_istine
+LEFT JOIN Sui_slucaj ON Sredstvo_utvrdivanja_istine.Id = Sui_slucaj.Id_sui
+GROUP BY Sredstvo_utvrdivanja_istine.Id;
+
+
+# Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
+DELIMITER //
+CREATE PROCEDURE DodajBrojDanaUZatvoru()
+BEGIN
+    
+    DECLARE done INT DEFAULT 0;
+    DECLARE osoba_id INT;
+    DECLARE datum_dolaska DATETIME;
+    DECLARE danas DATETIME;
+    
+    DECLARE cur CURSOR FOR
+    SELECT Id, Datum_dolaska_u_zgradu
+    FROM Osoba
+    WHERE Datum_odlaska_iz_zgrade IS NULL;
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+    
+    OPEN cur;
+    
+    read_loop: LOOP
+        FETCH cur INTO osoba_id, datum_dolaska;
+        
+        IF done = 1 THEN
+            LEAVE read_loop;
+        END IF;
+        
+       
+        SET danas = NOW();
+        SET @broj_dana_u_zatvoru = DATEDIFF(danas, datum_dolaska);
+        
+   
+        UPDATE Osoba
+        SET Broj_dana_u_zatvoru = @broj_dana_u_zatvoru
+        WHERE Id = osoba_id;
+    END LOOP;
+    
+    CLOSE cur;
+    
+END //
+DELIMITER ;
+
+# Napiši proceduru koja će omogućiti da pretražujemo slučajeve preko neke ključne riječi iz opisa
+DELIMITER //
+CREATE PROCEDURE PretraziSlucajevePoOpisu(IN kljucnaRijec TEXT)
+BEGIN
+    SELECT * FROM Slucaj WHERE Opis LIKE CONCAT('%', kljucnaRijec, '%');
+END //
+DELIMITER ;
+
+# Napiši proceduru koja će kreirati novu privremenu tablicu u kojoj će se prikazati svi psi i broj slučajeva na kojima su radili. Zatim će dodati novi stupac tablici pas i u njega upisati "nagrađeni pas" kod svih pasa koji su radili na više od 15 slučajeva 
+DELIMITER //
+CREATE PROCEDURE Godisnje_nagrađivanje_pasa()
+BEGIN
+    -- Kreiraj privremenu tablicu
+    CREATE TEMPORARY TABLE Temp_Psi (PasID INT, BrojSlucajeva INT);
+
+    -- Izračunaj broj slučajeva za svakog psa
+    INSERT INTO Temp_Psi (PasID, BrojSlucajeva)
+    SELECT Pas_id, COUNT(*) AS BrojSlucajeva
+    FROM Slucaj
+    GROUP BY Pas_id;
+
+    -- Dodaj novi stupac "Status" u tablicu "Pas" i označi "nagrađene pse"
+    ALTER TABLE Pas ADD COLUMN Status VARCHAR(255);
+
+    -- Postavi "nagrađeni pas" za pse koji su radili na više od 15 slučajeva
+    UPDATE Pas
+    SET Status = 'nagrađeni pas'
+    WHERE Id IN (SELECT PasID FROM Temp_Psi WHERE BrojSlucajeva > 15);
+    
+    -- Obriši privremenu tablicu
+    DROP TEMPORARY TABLE Temp_Psi;
+END //
+DELIMITER ;

@@ -98,7 +98,9 @@ CREATE TABLE Pas (
 	Id INTEGER AUTO_INCREMENT PRIMARY KEY,
     Id_vlasnik INTEGER,
     Ime VARCHAR(255),
-    Id_kaznjivo_djelo INTEGER, # dali je pas za drogu/ljude/oružje itd.
+    Dob INTEGER,
+    Status VARCHAR(255),
+    Id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.
     FOREIGN KEY (Id_vlasnik) REFERENCES Osoba(Id),
     FOREIGN KEY (Id_kaznjivo_djelo) REFERENCES Kaznjivadjela(ID)
     );
@@ -270,6 +272,19 @@ BEGIN
     IF NEW.Pocetak >= NEW.Zavrsetak THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Datum završetka slučaja mora biti veći od datuma početka.';
+    END IF;
+END;
+//
+DELIMITER ;
+
+# Napravi triger koji će, u slučaju da ažuriramo godine psa i one iznose 10 ili više, pas će biti automatski časno umirovljen
+DELIMITER //
+CREATE TRIGGER IzmjeniStatusPsa
+BEFORE INSERT ON Pas
+FOR EACH ROW
+BEGIN
+    IF NEW.dob >= 10 THEN
+        SET NEW.status = 'Časno umirovljen';
     END IF;
 END;
 //
@@ -516,10 +531,3 @@ BEGIN
 END //
 DELIMITER ;
 
-
-KILLCOUNT: 
-18 tablica (15 minimum) -> 120%
-5 trigera (ne piše broj, ali vjerojatno je 10 minimum) -> 50%
-11 upita (15 minimum) -> 73%
-8 pogleda ( 5 minimum) -> 160%
-3 procedure (10 minimum) -> 30%

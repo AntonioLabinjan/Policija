@@ -456,6 +456,23 @@ LEFT JOIN
 GROUP BY
     Voditelj;
 
+# Napravi view koji će prikazivati statistiku zapljena za svaku vrstu kaznenog djela (prosjek, minimum, maksimum  (za vrijednosti) i broj predmeta)
+CREATE VIEW StatistikaZapljenaPoKaznenomDjelu AS
+SELECT
+    K.Naziv AS 'Vrsta_kaznenog_djela',
+    AVG(Z.Vrijednost) AS 'Prosječna_vrijednost_zapljena',
+    MAX(Z.Vrijednost) AS 'Najveća_vrijednost_zapljena',
+    MIN(Z.Vrijednost) AS 'Najmanja_vrijednost_zapljena',
+    COUNT(Z.ID) AS 'Broj_zapljenjenih_predmeta'
+FROM Zapljene Z
+JOIN Slucaj S ON Z.SlucajID = S.ID
+JOIN KaznjivaDjela_u_Slucaju KDUS ON S.ID = KDUS.SlucajID
+JOIN KaznjivaDjela K ON KDUS.KaznjivoDjeloID = K.ID
+GROUP BY K.Naziv;
+
+
+SELECT * From StatistikaZapljenaPoKaznenomDjelu
+DROP VIEW StatistikaZapljenaPoKaznenomDjelu
 # Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
 DELIMITER //
 CREATE PROCEDURE DodajBrojDanaUZatvoru()
@@ -531,3 +548,9 @@ BEGIN
 END //
 DELIMITER ;
 
+Killcount: 
+18 tablica,
+6 trigera,
+11 upita,
+9 pogleda,
+3 procedure

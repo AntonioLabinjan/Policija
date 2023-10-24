@@ -3,6 +3,30 @@ CREATE DATABASE Policija;
 USE Policija;
 
 # TABLICE
+CREATE TABLE Podrucje_uprave (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL UNIQUE
+);
+CREATE TABLE Mjesto (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Naziv VARCHAR(255) NOT NULL,
+    Id_Podrucje_Uprave INT,
+    FOREIGN KEY (Id_Podrucje_Uprave) REFERENCES Podrucje_uprave(Id)
+);
+
+CREATE TABLE VrstaZgrade (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    OpisVrste VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE Zgrada (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Adresa VARCHAR(255) NOT NULL,
+    MjestoID INT,
+    VrstaZgradeID INT,
+    FOREIGN KEY (MjestoID) REFERENCES Mjesto(ID),
+    FOREIGN KEY (VrstaZgradeID) REFERENCES VrstaZgrade(ID)
+);
 CREATE TABLE  Radno_mjesto(
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Vrsta VARCHAR(255) NOT NULL,
@@ -13,31 +37,6 @@ CREATE TABLE Odjeli (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Naziv VARCHAR(255) NOT NULL UNIQUE,
     Opis TEXT
-);
-
-CREATE TABLE VrstaZgrade (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    OpisVrste VARCHAR(255) NOT NULL UNIQUE
-);
-
-CREATE TABLE Podrucje_uprave (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL UNIQUE
-);
-
-CREATE TABLE Mjesto (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL,
-    Id_Podrucje_Uprave INT,
-    FOREIGN KEY (Id_Podrucje_Uprave) REFERENCES Podrucje_uprave(Id)
-);
-CREATE TABLE Zgrada (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Adresa VARCHAR(255) NOT NULL,
-    MjestoID INT,
-    VrstaZgradeID INT,
-    FOREIGN KEY (MjestoID) REFERENCES Mjesto(ID),
-    FOREIGN KEY (VrstaZgradeID) REFERENCES VrstaZgrade(ID)
 );
 
 CREATE TABLE Osoba (
@@ -66,6 +65,7 @@ CREATE TABLE Osoba (
 
 
 
+
 CREATE TABLE Vozilo (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Marka VARCHAR(255) NOT NULL,
@@ -75,6 +75,9 @@ CREATE TABLE Vozilo (
     Vlasnik_id INT,
     FOREIGN KEY (Vlasnik_id) REFERENCES Osoba(Id)
 );
+
+
+
 
 
 CREATE TABLE Predmet (
@@ -90,6 +93,7 @@ CREATE TABLE KaznjivaDjela (
     Opis TEXT NOT NULL,
     Predviđena_kazna INT
 );
+
 CREATE TABLE Pas (
 	Id INTEGER AUTO_INCREMENT PRIMARY KEY,
     Id_vlasnik INTEGER,
@@ -121,17 +125,6 @@ CREATE TABLE Slucaj (
     FOREIGN KEY (Pas_id) REFERENCES Pas(Id),
     FOREIGN KEY (Svjedok_id) REFERENCES Osoba(Id)
 );
-CREATE TABLE KaznjivaDjela_u_Slucaju (
-	ID INT AUTO_INCREMENT PRIMARY KEY,
-    SlucajID INT,
-    KaznjivoDjeloID INT,
-    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID),
-    FOREIGN KEY (KaznjivoDjeloID) REFERENCES KaznjivaDjela(ID)
-);
-
-
-
-
 
 CREATE TABLE EvidencijaDogadaja (
     Id INT AUTO_INCREMENT PRIMARY KEY,
@@ -145,6 +138,15 @@ CREATE TABLE EvidencijaDogadaja (
     FOREIGN KEY (MjestoId) REFERENCES Mjesto(Id)
 );
 
+
+
+CREATE TABLE KaznjivaDjela_u_Slucaju (
+	ID INT AUTO_INCREMENT PRIMARY KEY,
+    SlucajID INT,
+    KaznjivoDjeloID INT,
+    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID),
+    FOREIGN KEY (KaznjivoDjeloID) REFERENCES KaznjivaDjela(ID)
+);
 
 
 
@@ -184,6 +186,33 @@ CREATE TABLE Sui_slucaj (
 
 
 # TRIGERI
+# Triger koji osigurava da pri unosu spola osobe možemo staviti samo muški ili ženski spol
+DELIMITER //
+CREATE TRIGGER ProvjeriIspravnostSpola
+BEFORE INSERT ON Osoba
+FOR EACH ROW
+BEGIN
+    DECLARE validanSpol BOOLEAN;
+
+    -- Konvertiraj spol u lowercase za usporedbu
+    SET NEW.Spol = LOWER(NEW.Spol);
+
+    -- Provjeri je li spol u ispravnom formatu
+    IF NEW.Spol IN ('muski', 'zenski', 'muški', 'ženski', 'm', 'ž', 'muški', 'ženski', 'muski', 'zenski') THEN
+        SET validanSpol = TRUE;
+    ELSE
+        SET validanSpol = FALSE;
+    END IF;
+
+    -- Ako spol nije valjan, spriječi unos
+    IF NOT validanSpol THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Spol nije valjan. Ispravni formati su: muski, zenski, m, ž, muški, ženski.';
+    END IF;
+END;
+//
+DELIMITER ;
+
 # Triger koji kreira stupac UkupnaVrijednostZapljena u tablici slučaj i ažurira ga nakon svake nove unesene zapljene u tom slučaju
 DELIMITER //
 CREATE TRIGGER AzurirajVrijednostZapljena
@@ -279,6 +308,13 @@ FROM Slucaj
 LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.SlucajID
 GROUP BY Slucaj.ID;
 
+# Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska) // OVO NE VALJA
+SELECT K.Naziv, K.Opis
+FROM KaznjivaDjela_u_Slucaju KS
+JOIN KaznjivaDjela K ON KS.KaznjivoDjeloID = K.ID
+JOIN EvidencijaDogadaja ED ON KS.SlucajID = ED.SlucajID
+WHERE ED.MjestoId = 1; 
+
 # Nađimo  sve događaje koji uključuju pojedino kažnjivo djelo
 SELECT E.OpisDogadjaja, E.DatumVrijeme
 FROM EvidencijaDogadaja E
@@ -361,6 +397,50 @@ LEFT JOIN Sui_slucaj ON Sredstvo_utvrdivanja_istine.Id = Sui_slucaj.Id_sui
 GROUP BY Sredstvo_utvrdivanja_istine.Id;
 
 
+# Napravi pogled koji će izlistati sve slučajeve i sredstva utvrđivanja istine u njima, te izračunati trajanje svakog od slučajeva
+
+CREATE VIEW SlucajeviSortiraniPoTrajanjuISredstva AS
+SELECT S.*, 
+       TIMESTAMPDIFF(DAY, S.Pocetak, S.Zavrsetak) AS Trajanje_u_danima, 
+       GROUP_CONCAT(SUI.Naziv ORDER BY SUI.Naziv ASC SEPARATOR ', ') AS SredstvaUtvrdivanjaIstine
+FROM Slucaj S
+LEFT JOIN Sui_slucaj SUI_S ON S.ID = SUI_S.Id_slucaj
+LEFT JOIN Sredstvo_utvrdivanja_istine SUI ON SUI_S.Id_sui = SUI.ID
+GROUP BY S.ID
+ORDER BY Trajanje_u_danima DESC;
+
+# Napiši pogled koji će u jednu privremenu tablicu pohraniti sve izvještaje vezane uz pojedine slučajeve
+CREATE VIEW IzvjestajiZaSlucajeve AS
+SELECT S.Naziv AS Slucaj, I.Naslov AS NaslovIzvjestaja, I.Sadržaj AS SadržajIzvjestaja, O.Ime_Prezime AS AutorIzvjestaja
+FROM Izvjestaji I
+INNER JOIN Slucaj S ON I.SlucajID = S.ID
+INNER JOIN Osoba O ON I.AutorID = O.Id;
+
+# Napravi pogled koji će izlistati sve osobe i njihove odjele. Ukoliko osoba nije policajac te nema odjel (odjel je NULL), neka se uz tu osobu napiše "Osoba nije policijski službenik"
+CREATE VIEW OsobeIOdjeli AS
+SELECT O.Ime_Prezime AS ImeOsobe,
+       CASE
+           WHEN O.Odjel_id IS NOT NULL THEN OD.Naziv
+           ELSE 'Osoba nije policijski službenik'
+       END AS NazivOdjela
+FROM Osoba O
+LEFT JOIN Odjeli OD ON O.Odjel_id = OD.Id;
+
+# Napravi pogled koji će ispisati sve voditelje slučajeva, ukupan broj slučajeva koje vode, ukupan broj rješenjih slučajeva, ukupan broj nerješenih slučajeva i postotak rješenosti
+CREATE VIEW VoditeljiSlucajeviPregled AS
+SELECT
+    O.Ime_Prezime AS Voditelj,
+    COUNT(S.ID) AS UkupanBrojSlucajeva,
+    SUM(CASE WHEN S.Status = 'Završeno' THEN 1 ELSE 0 END) AS UkupanBrojRijesenihSlucajeva,
+    SUM(CASE WHEN S.Status = 'Aktivan' THEN 1 ELSE 0 END) AS UkupanBrojNerijesenihSlucajeva,
+    (SUM(CASE WHEN S.Status = 'Završeno' THEN 1 ELSE 0 END) / COUNT(S.ID)) * 100 AS PostotakRjesenosti
+FROM
+    Osoba O
+LEFT JOIN
+    Slucaj S ON O.ID = S.VoditeljID
+GROUP BY
+    Voditelj;
+
 # Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
 DELIMITER //
 CREATE PROCEDURE DodajBrojDanaUZatvoru()
@@ -414,53 +494,32 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE Godisnje_nagrađivanje_pasa()
 BEGIN
+    -- Kreiraj privremenu tablicu
     CREATE TEMPORARY TABLE Temp_Psi (PasID INT, BrojSlucajeva INT);
 
+    -- Izračunaj broj slučajeva za svakog psa
     INSERT INTO Temp_Psi (PasID, BrojSlucajeva)
     SELECT Pas_id, COUNT(*) AS BrojSlucajeva
     FROM Slucaj
     GROUP BY Pas_id;
 
+    -- Dodaj novi stupac "Status" u tablicu "Pas" i označi "nagrađene pse"
     ALTER TABLE Pas ADD COLUMN Status VARCHAR(255);
 
+    -- Postavi "nagrađeni pas" za pse koji su radili na više od 15 slučajeva
     UPDATE Pas
     SET Status = 'nagrađeni pas'
     WHERE Id IN (SELECT PasID FROM Temp_Psi WHERE BrojSlucajeva > 15);
     
+    -- Obriši privremenu tablicu
     DROP TEMPORARY TABLE Temp_Psi;
 END //
 DELIMITER ;
-DROP PROCEDURE IzracunajProsjecnoTrajanjePoOdjelu;
-# Napiši proceduru koja će računati prosječno trajanje slučaja po odjelu
-DELIMITER //
 
-CREATE PROCEDURE IzracunajProsjecnoTrajanjePoOdjelu()
-BEGIN
-    CREATE TEMPORARY TABLE Temp_ProsjecnoTrajanje (OdjelID INT, ProsjecnoTrajanje DECIMAL(10, 2));
-
-    INSERT INTO Temp_ProsjecnoTrajanje (OdjelID, ProsjecnoTrajanje)
-    SELECT O.Id AS OdjelID, AVG(DATEDIFF(S.Zavrsetak, S.Pocetak)) AS ProsjecnoTrajanje
-    FROM Odjeli O
-    LEFT JOIN Osoba Os ON O.Id = Os.Odjel_id
-    LEFT JOIN Slucaj S ON Os.Id = S.Osoba_id
-    WHERE S.Osoba_id IS NOT NULL
-    GROUP BY O.Id;
-
-    SELECT O.Naziv AS 'Naziv odjela', T.ProsjecnoTrajanje AS 'Prosjecno trajanje (u danima)'
-    FROM Odjeli O
-    LEFT JOIN Temp_ProsjecnoTrajanje T ON O.Id = T.OdjelID;
-
-    DROP TEMPORARY TABLE Temp_ProsjecnoTrajanje;
-END //
-
-DELIMITER ;
-
-
-CALL IzracunajProsjecnoTrajanjePoOdjelu();
 
 KILLCOUNT: 
 18 tablica (15 minimum) -> 120%
-4 trigera (ne piše broj, ali vjerojatno je 10 minimum) -> 40%
-10 upita (15 minimum) -> 67%
-4 pogleda ( 5 minimum) -> 80%
-4 procedure (10 minimum) -> 40%
+5 trigera (ne piše broj, ali vjerojatno je 10 minimum) -> 50%
+11 upita (15 minimum) -> 73%
+8 pogleda ( 5 minimum) -> 160%
+3 procedure (10 minimum) -> 30%

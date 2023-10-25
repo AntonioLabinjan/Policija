@@ -471,8 +471,27 @@ JOIN KaznjivaDjela K ON KDUS.KaznjivoDjeloID = K.ID
 GROUP BY K.Naziv;
 
 
-SELECT * From StatistikaZapljenaPoKaznenomDjelu
-DROP VIEW StatistikaZapljenaPoKaznenomDjelu
+SELECT * From StatistikaZapljenaPoKaznenomDjelu;
+DROP VIEW StatistikaZapljenaPoKaznenomDjelu;
+
+# Napravi view koji će za svaki slučaj izračunati ukupnu zatvorsku kaznu, uz ograničenje da maksimalna zakonska zatvorska kazna u RH iznosi 50 godina. Ako ukupna kazna premaši 50, postaviti će se na 50 uz odgovarajuće upozorenje
+CREATE VIEW UkupnaPredvidenaKaznaPoSlucaju AS
+SELECT S.ID AS 'SlucajID',
+       S.Naziv AS 'NazivSlucaja',
+       CASE
+           WHEN SUM(KD.Predviđena_kazna) > 50 THEN 50
+           ELSE SUM(KD.Predviđena_kazna)
+       END AS 'UkupnaPredvidenaKazna',
+       CASE
+           WHEN SUM(KD.Predviđena_kazna) > 50 THEN 'Maksimalna zakonska zatvorska kazna iznosi 50 godina'
+           ELSE NULL
+       END AS 'Napomena'
+FROM Slucaj S
+LEFT JOIN KaznjivaDjela_u_Slucaju KDUS ON S.ID = KDUS.SlucajID
+LEFT JOIN KaznjivaDjela KD ON KDUS.KaznjivoDjeloID = KD.ID
+GROUP BY S.ID, S.Naziv;
+
+
 # Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
 DELIMITER //
 CREATE PROCEDURE DodajBrojDanaUZatvoru()
@@ -548,9 +567,37 @@ BEGIN
 END //
 DELIMITER ;
 
-Killcount: 
-18 tablica,
-6 trigera,
-11 upita,
-9 pogleda,
-3 procedure
+# Napiši proceduru koja će generirati izvještaje o slučajevima u zadnjih 20 dana (ovaj broj se može prilagođavati)
+DELIMITER //
+CREATE PROCEDURE GenerirajIzvjestajeOSlučajevima()
+BEGIN
+    DECLARE DatumPocetka DATE;
+    DECLARE DatumZavrsetka DATE;
+    
+    -- Postavite početni i završni datum za analizu (npr. 20 dana, ali moremo izmjenit)
+    SET DatumPocetka = CURDATE() - INTERVAL 20 DAY;
+    SET DatumZavrsetka = CURDATE();
+    
+    -- Kreiraj tablicu za izvještaje
+    CREATE TEMPORARY TABLE TempIzvjestaji (
+        SlucajID INT,
+        NazivSlucaja VARCHAR(255),
+        Pocetak DATE,
+        Zavrsetak DATE,
+        Status VARCHAR(50)
+    );
+
+    -- Ubaci podatke o slucajevima u privremenu tablicu
+    INSERT INTO TempIzvjestaji (SlucajID, NazivSlucaja, Pocetak, Zavrsetak, Status)
+    SELECT S.ID, S.Naziv, S.Pocetak, S.Zavrsetak, S.Status
+    FROM Slucaj S
+    WHERE S.Pocetak BETWEEN DatumPocetka AND DatumZavrsetka;
+    
+    -- Izradi izvjestaje
+    SELECT * FROM TempIzvjestaji;
+    
+    -- Obrisi privremenu tablicu
+    DROP TEMPORARY TABLE TempIzvjestaji;
+END;
+//
+DELIMITER ;

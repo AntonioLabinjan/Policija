@@ -48,7 +48,7 @@ CREATE TABLE Osoba (
     Fotografija BLOB,
     Telefon VARCHAR(20) NOT NULL,
     Email VARCHAR(255) NOT NULL UNIQUE,
-    Datum_dolaska_u_zgradu DATETIME,
+    Datum_dolaska_u_zgradu DATETIME, # ove neke atribute ni obavezno ispunit
     Datum_odlaska_iz_zgrade DATETIME,# zatvor/postaja/bolnica i sl
     Nadređeni_id INT, 
     Radno_mjesto_id INT,
@@ -196,17 +196,14 @@ FOR EACH ROW
 BEGIN
     DECLARE validanSpol BOOLEAN;
 
-    -- Konvertiraj spol u lowercase za usporedbu
     SET NEW.Spol = LOWER(NEW.Spol);
 
-    -- Provjeri je li spol u ispravnom formatu
     IF NEW.Spol IN ('muski', 'zenski', 'muški', 'ženski', 'm', 'ž', 'muški', 'ženski', 'muski', 'zenski') THEN
         SET validanSpol = TRUE;
     ELSE
         SET validanSpol = FALSE;
     END IF;
 
-    -- Ako spol nije valjan, spriječi unos
     IF NOT validanSpol THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Spol nije valjan. Ispravni formati su: muski, zenski, m, ž, muški, ženski.';
@@ -545,24 +542,24 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE Godisnje_nagrađivanje_pasa()
 BEGIN
-    -- Kreiraj privremenu tablicu
+    
     CREATE TEMPORARY TABLE Temp_Psi (PasID INT, BrojSlucajeva INT);
 
-    -- Izračunaj broj slučajeva za svakog psa
+    
     INSERT INTO Temp_Psi (PasID, BrojSlucajeva)
     SELECT Pas_id, COUNT(*) AS BrojSlucajeva
     FROM Slucaj
     GROUP BY Pas_id;
 
-    -- Dodaj novi stupac "Status" u tablicu "Pas" i označi "nagrađene pse"
+    
     ALTER TABLE Pas ADD COLUMN Status VARCHAR(255);
 
-    -- Postavi "nagrađeni pas" za pse koji su radili na više od 15 slučajeva
+    
     UPDATE Pas
     SET Status = 'nagrađeni pas'
     WHERE Id IN (SELECT PasID FROM Temp_Psi WHERE BrojSlucajeva > 15);
     
-    -- Obriši privremenu tablicu
+    
     DROP TEMPORARY TABLE Temp_Psi;
 END //
 DELIMITER ;
@@ -574,11 +571,10 @@ BEGIN
     DECLARE DatumPocetka DATE;
     DECLARE DatumZavrsetka DATE;
     
-    -- Postavite početni i završni datum za analizu (npr. 20 dana, ali moremo izmjenit)
+    -- Postavimo početni i završni datum za analizu (npr. 20 dana, ali moremo izmjenit)
     SET DatumPocetka = CURDATE() - INTERVAL 20 DAY;
     SET DatumZavrsetka = CURDATE();
     
-    -- Kreiraj tablicu za izvještaje
     CREATE TEMPORARY TABLE TempIzvjestaji (
         SlucajID INT,
         NazivSlucaja VARCHAR(255),
@@ -587,17 +583,137 @@ BEGIN
         Status VARCHAR(50)
     );
 
-    -- Ubaci podatke o slucajevima u privremenu tablicu
+    
     INSERT INTO TempIzvjestaji (SlucajID, NazivSlucaja, Pocetak, Zavrsetak, Status)
     SELECT S.ID, S.Naziv, S.Pocetak, S.Zavrsetak, S.Status
     FROM Slucaj S
     WHERE S.Pocetak BETWEEN DatumPocetka AND DatumZavrsetka;
     
-    -- Izradi izvjestaje
+    
     SELECT * FROM TempIzvjestaji;
     
-    -- Obrisi privremenu tablicu
+    
     DROP TEMPORARY TABLE TempIzvjestaji;
 END;
 //
 DELIMITER ;
+
+# FUNKCIJE
+# Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
+DELIMITER //
+CREATE FUNCTION KDInfo(naziv_kaznenog_djela VARCHAR(255)) RETURNS TEXT
+DETERMINISTIC
+BEGIN
+    DECLARE predvidena_kazna INT;
+    DECLARE broj_pojavljivanja INT;
+    
+    SELECT Predviđena_kazna INTO predvidena_kazna
+    FROM KaznjivaDjela
+    WHERE Naziv = naziv_kaznenog_djela;
+
+    SELECT COUNT(*) INTO broj_pojavljivanja
+    FROM KaznjivaDjela_u_Slucaju
+    WHERE KaznjivoDjeloID = (SELECT ID FROM KaznjivaDjela WHERE Naziv = naziv_kaznenog_djela);
+
+    RETURN CONCAT('Kazneno djelo: ', naziv_kaznenog_djela, '\nPredviđena kazna: ', predvidena_kazna, '\nBroj pojavljivanja: ', broj_pojavljivanja);
+END;
+//
+DELIMITER ;
+
+SELECT KDInfo('NazivKaznenogDjela');
+
+# Napiši funkciju koja će vratiti informacije o osobi prema broju telefona
+DELIMITER //
+CREATE FUNCTION InformacijeOOsobiPoTelefonu(broj_telefona VARCHAR(20)) RETURNS TEXT
+DETERMINISTIC
+BEGIN
+    DECLARE osoba_info TEXT;
+
+    SELECT CONCAT('Ime i prezime: ', Ime_Prezime, '\nDatum rođenja: ', Datum_rodjenja, '\nAdresa: ', Adresa, '\nEmail: ', Email)
+    INTO osoba_info
+    FROM Osoba
+    WHERE Telefon = broj_telefona;
+
+    IF osoba_info IS NOT NULL THEN
+        RETURN osoba_info;
+    ELSE
+        RETURN 'Osoba s navedenim brojem telefona nije pronađena.';
+    END IF;
+END;
+//
+DELIMITER ;
+
+# Napravi funkciju koja će za argument uzimati naziv grada i onda će izbrojati sve slučajeve u tom gradu. Također će izbrojiti sve slučajeve generalno i sve gradove generalno. Zatim će izračunati prosječan broj slučajeva po gradu. Na samom kraju će usporediti broj slučajeva u gradu koji smo uzeli za argument s prosječnim brojem slučajeva i vratit će "Ispodprosječna stopa" ako je manji od prosjeka; "U skladu s prosjekom" ako je isti kao prosjek ili "Iznadprosječna stopa" ako je veći od prosjeka. Prosjek računamo tako da podijelimo ukupan broj slučajeva s ukupnim brojem gradova
+DELIMITER //
+CREATE FUNCTION StopaKriminaliteta(grad VARCHAR(255))
+RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+    DECLARE broj_slucajeva_u_gradu INT;
+    DECLARE ukupan_broj_slucajeva INT;
+    DECLARE ukupan_broj_gradova INT;
+    DECLARE prosjecna_stopa_kriminaliteta DECIMAL(10, 2);
+
+    SELECT COUNT(*) INTO broj_slucajeva_u_gradu
+    FROM Slucaj
+    WHERE MjestoId = (SELECT Id FROM Mjesto WHERE Naziv = grad);
+
+    SELECT COUNT(*) INTO ukupan_broj_slucajeva
+    FROM Slucaj;
+
+    SELECT COUNT(DISTINCT MjestoId) INTO ukupan_broj_gradova
+    FROM Slucaj;
+
+    IF ukupan_broj_gradova > 0 THEN
+        SET prosjecna_stopa_kriminaliteta = ukupan_broj_slucajeva / ukupan_broj_gradova;
+    ELSE
+        SET prosjecna_stopa_kriminaliteta = 0;
+    END IF;
+
+    IF broj_slucajeva_u_gradu < prosjecna_stopa_kriminaliteta THEN
+        RETURN 'Ispodprosječna stopa';
+    ELSEIF broj_slucajeva_u_gradu = prosjecna_stopa_kriminaliteta THEN
+        RETURN 'U skladu s prosjekom';
+    ELSE
+        RETURN 'Iznadprosječna stopa';
+    END IF;
+END;
+//
+DELIMITER ;
+
+# NAPIŠI SQL FUNKCIJU KOJA ĆE SLUŽITI ZA UNAPRIJEĐENJE POLICIJSKIH SLUŽBENIKA. Za argument će primati id osobe koju unaprijeđujemo i id novog radnog mjesta na koje je unaprijeđujemo. Taj će novi radno_mjesto_id zamjeniti stari. Također će provjeravati je li slučajno novi radno_mjesto_id jednak radno_mjesto_id-ju osobe koja je nadređena osobi koju unaprijeđujemo. Ako jest, postavit ćemo nadređeni_id na NULL zato što nam ne može biti nadređena osoba ista po činu
+DELIMITER //
+CREATE FUNCTION UnaprijediPolicijskogSluzbenika(osoba_id INT, novo_radno_mjesto_id INT)
+RETURNS VARCHAR(255)
+DETERMINISTIC
+BEGIN
+    DECLARE stari_radno_mjesto_id INT;
+    DECLARE stari_nadredeni_id INT;
+
+    SELECT Radno_mjesto_id, Nadređeni_id INTO stari_radno_mjesto_id, stari_nadredeni_id
+    FROM Osoba
+    WHERE Id = osoba_id;
+
+    IF novo_radno_mjesto_id = stari_radno_mjesto_id THEN
+        UPDATE Osoba
+        SET Nadređeni_id = NULL
+        WHERE Id = osoba_id;
+        RETURN 'Unaprijeđeni službenik nema istog nadređenog.';
+    ELSE
+        UPDATE Osoba
+        SET Radno_mjesto_id = novo_radno_mjesto_id
+        WHERE Id = osoba_id;
+        RETURN 'Službenik uspješno unaprijeđen.';
+    END IF;
+END;
+//
+DELIMITER ;
+
+/* KILLCOUNT:
+    18 tables
+    6 triggers
+    11 queries
+    10 views
+    4 functions
+    4 procedures
+*/

@@ -825,6 +825,7 @@ DELIMITER //
 
 CREATE FUNCTION DohvatiSlucajIOsobu(predmet_id INT)
 RETURNS VARCHAR(512)
+DETERMINISTIC
 BEGIN
     DECLARE slucaj_naziv VARCHAR(255);
     DECLARE osoba_ime_prezime VARCHAR(255);

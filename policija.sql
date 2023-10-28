@@ -420,7 +420,7 @@ LEFT JOIN Sredstvo_utvrdivanja_istine SUI ON SUI_S.Id_sui = SUI.ID
 GROUP BY S.ID
 ORDER BY Trajanje_u_danima DESC;
 
-# Napiši pogled koji će u jednu privremenu tablicu pohraniti sve izvještaje vezane uz pojedine slučajeve
+# Napiši pogled koji će u jednu tablicu pohraniti sve izvještaje vezane uz pojedine slučajeve
 CREATE VIEW IzvjestajiZaSlucajeve AS
 SELECT S.Naziv AS Slucaj, I.Naslov AS NaslovIzvjestaja, I.Sadržaj AS SadržajIzvjestaja, O.Ime_Prezime AS AutorIzvjestaja
 FROM Izvjestaji I
@@ -599,6 +599,75 @@ END;
 //
 DELIMITER ;
 
+# Napiši proceduru koja će za određenu osobu kreirati potvrdu o nekažnjavanju. To će napraviti samo u slučaju da osoba stvarno nije evidentirana niti u jednom slučaju kao počinitelj. Ukoliko je osoba kažnjavana i za to ćemo dobiti odgovarajuću obavijest. Također,ako uspješno izdamo potvrdu, neka se prikaže i datum izdavanja
+DELIMITER //
+
+CREATE PROCEDURE ProvjeriNekažnjavanje(IN osoba_id INT)
+BEGIN
+    DECLARE počinitelj_count INT;
+    DECLARE osoba_ime_prezime VARCHAR(255);
+    DECLARE obavijest VARCHAR(255);
+    DECLARE izdavanje_datum DATETIME;
+
+    SET izdavanje_datum = NOW();
+
+    SELECT Ime_Prezime INTO osoba_ime_prezime FROM Osoba WHERE Id = osoba_id;
+
+    SELECT COUNT(*) INTO počinitelj_count
+    FROM Slucaj
+    WHERE PociniteljID = osoba_id;
+
+    IF počinitelj_count > 0 THEN
+        SET obavijest = 'Osoba je kažnjavana';
+        SELECT obavijest AS Poruka;
+    ELSE
+        INSERT INTO Izvjestaji (Naslov, Sadržaj, AutorID, SlucajID)
+        VALUES ('Potvrda o nekažnjavanju', CONCAT('Osoba ', osoba_ime_prezime, ' nije kažnjavana. Izdana ', DATE_FORMAT(izdavanje_datum, '%d-%m-%Y %H:%i:%s')), osoba_id, NULL);
+        SELECT CONCAT('Potvrda za ', osoba_ime_prezime) AS Poruka;
+    END IF;
+END //
+
+DELIMITER ;
+
+# Napiši proceduru koja će omogućiti da za određenu osobu izmjenimo kontakt informacije (email i/ili broj telefona)
+DELIMITER //
+
+CREATE PROCEDURE IzmjeniKontaktInformacije(
+    IN osoba_id INT,
+    IN novi_email VARCHAR(255),
+    IN novi_telefon VARCHAR(20)
+)
+BEGIN
+    -- Provjeri postoji li osoba s navedenim ID-jem
+    DECLARE br_osoba INT;
+    SELECT COUNT(*) INTO br_osoba FROM Osoba WHERE Id = osoba_id;
+    
+    IF br_osoba > 0 THEN
+        UPDATE Osoba
+        SET Email = novi_email, Telefon = novi_telefon
+        WHERE Id = osoba_id;
+        
+        SELECT 'Kontakt informacije su uspješno izmijenjene' AS Poruka;
+    ELSE
+        SELECT 'Osoba s navedenim ID-jem ne postoji' AS Poruka;
+    END IF;
+END //
+
+DELIMITER ;
+
+# Napiši proceduru koja će za određeni slučaj izlistati sve događaje koji su se u njemu dogodili i poredati ih kronološki
+DELIMITER //
+
+CREATE PROCEDURE Izlistaj_dogadjaje(IN slucajID INT)
+BEGIN
+    SELECT ed.Id, ed.OpisDogadjaja, ed.DatumVrijeme
+    FROM EvidencijaDogadaja AS ed
+    WHERE ed.SlucajID = slucajID
+    ORDER BY ed.DatumVrijeme;
+END //
+
+DELIMITER ;
+
 # FUNKCIJE
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
@@ -709,6 +778,35 @@ BEGIN
     END IF;
 END;
 //
+DELIMITER ;
+
+# Napiši funkciju koja će za određeni predmet vratiti slučaj u kojem je taj predmet dokaz i osobu koja je u tom slučaju osumnjičena
+DELIMITER //
+
+CREATE FUNCTION DohvatiSlucajIOsobu(predmet_id INT)
+RETURNS VARCHAR(512)
+BEGIN
+    DECLARE slucaj_naziv VARCHAR(255);
+    DECLARE osoba_ime_prezime VARCHAR(255);
+    DECLARE rezultat VARCHAR(512);
+    
+    -- Dohvati naziv slučaja
+    SELECT Slucaj.Naziv INTO slucaj_naziv
+    FROM Slucaj
+    WHERE Slucaj.DokazID = predmet_id;
+    
+    -- Dohvati ime i prezime osobe povezane s predmetom
+    SELECT Osoba.Ime_Prezime INTO osoba_ime_prezime
+    FROM Osoba
+    INNER JOIN Slucaj ON Osoba.Id = Slucaj.PociniteljID
+    WHERE Slucaj.DokazID = predmet_id;
+    
+    
+    SET rezultat = CONCAT('Odabrani je predmet dokaz u slučaju: ', slucaj_naziv, ', gdje je osumnjičena osoba: ', osoba_ime_prezime);
+    
+    RETURN rezultat;
+END //
+
 DELIMITER ;
 
 

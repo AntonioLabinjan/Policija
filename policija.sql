@@ -279,6 +279,46 @@ END;
 //
 DELIMITER ;
 
+# Napiši triger koji će, u slučaju da je osoba mlađa od 18 godina (godina današnjeg datuma - godina rođenja daju broj manji od 18), pri dodavanju te osobe u slučaj dodati poseban stupac s napomenom: Počinitelj je maloljetan - slučaj nije otvoren za javnost
+ALTER TABLE Slucaj
+ADD COLUMN Napomena VARCHAR(255);
+
+DELIMITER //
+
+CREATE TRIGGER DodajNapomenuZaMaloljetnogPocinitelja
+BEFORE INSERT ON Slucaj
+FOR EACH ROW
+BEGIN
+    DECLARE datum_rodjenja DATE;
+    DECLARE godina_danas INT;
+    DECLARE godina_rodjenja INT;
+    
+    -- Dohvati datum rođenja osobe povezane s slučajem
+    SELECT Osoba.Datum_rodjenja INTO datum_rodjenja
+    FROM Osoba
+    WHERE Osoba.Id = NEW.PociniteljID;
+    
+    -- Izračunaj trenutnu godinu
+    SET godina_danas = YEAR(NOW());
+    
+    -- Izračunaj godinu rođenja osobe
+    SET godina_rodjenja = YEAR(datum_rodjenja);
+    
+    -- Provjeri je li osoba mlađa od 18 godina
+    IF (godina_danas - godina_rodjenja) < 18 THEN
+        -- Postavi napomenu za maloljetnog počinitelja
+        SET NEW.Napomena = 'Počinitelj je maloljetan - slučaj nije otvoren za javnost';
+    ELSE
+        -- Postavi napomenu za punoljetnog počinitelja
+        SET NEW.Napomena = 'Počinitelj je punoljetan - javnost smije prisustvovati slučaju';
+    END IF;
+END //
+
+DELIMITER ;
+
+
+
+
 # UPITI
 # Ispišimo sve voditelje slučajeva i slučajeve koje vode
 SELECT O.Ime_Prezime, S.Naziv AS 'Naziv slučaja'
@@ -801,7 +841,7 @@ BEGIN
     INNER JOIN Slucaj ON Osoba.Id = Slucaj.PociniteljID
     WHERE Slucaj.DokazID = predmet_id;
     
-    
+    -- Konkateniraj naziv slučaja i ime i prezime osobe
     SET rezultat = CONCAT('Odabrani je predmet dokaz u slučaju: ', slucaj_naziv, ', gdje je osumnjičena osoba: ', osoba_ime_prezime);
     
     RETURN rezultat;
@@ -812,9 +852,9 @@ DELIMITER ;
 
 /* KILLCOUNT:
     18 tables
-    6 triggers
+    7 triggers
     11 queries
     10 views
-    4 functions
-    4 procedures
+    5 functions
+    6 procedures
 */

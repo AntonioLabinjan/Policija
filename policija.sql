@@ -279,6 +279,23 @@ END;
 //
 DELIMITER ;
 
+# Napravi triger koji će, u slučaju da je pas časno umirovljen koristeći triger (ili ručno), onemogućiti da ga koristimo u novim slučajevima
+DELIMITER //
+CREATE TRIGGER Ne_koristi_umirovljene_pse
+BEFORE INSERT ON Slucaj
+FOR EACH ROW
+BEGIN
+    DECLARE PasStatus VARCHAR(255);
+    SELECT Status INTO PasStatus FROM Pas WHERE Id = NEW.Pas_id;
+    
+    IF PasStatus = 'Časno umirovljen' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Pas kojeg pokušavate koristiti na slučaju je umirovljen, odaberite drugog.';
+    END IF;
+END;
+//
+DELIMITER ;
+
 # Napiši triger koji će, u slučaju da je osoba mlađa od 18 godina (godina današnjeg datuma - godina rođenja daju broj manji od 18), pri dodavanju te osobe u slučaj dodati poseban stupac s napomenom: Počinitelj je maloljetan - slučaj nije otvoren za javnost
 ALTER TABLE Slucaj
 ADD COLUMN Napomena VARCHAR(255);
@@ -355,7 +372,7 @@ FROM Slucaj
 LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.SlucajID
 GROUP BY Slucaj.ID;
 
-# Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska) // OVO NE VALJA
+# Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska)
 SELECT K.Naziv, K.Opis
 FROM KaznjivaDjela_u_Slucaju KS
 JOIN KaznjivaDjela K ON KS.KaznjivoDjeloID = K.ID
@@ -402,6 +419,24 @@ WHERE KD.Predviđena_kazna IS NOT NULL
 GROUP BY O.Id, O.Ime_Prezime
 ORDER BY Ukupna_kazna DESC
 LIMIT 1;
+
+# Pronađi policijskog službenika koji je vodio najviše slučajeva
+SELECT
+    z.Id AS Zaposlenik_Id,
+    o.Ime_Prezime AS Ime_Prezime,
+    COUNT(s.Id) AS Broj_Slucajeva
+FROM Zaposlenik z
+JOIN Osoba o ON z.Osoba_id = o.Id
+LEFT JOIN Slucaj s ON s.VoditeljID = z.Id
+GROUP BY z.Id, o.Ime_Prezime
+HAVING COUNT(s.Id) = (
+    SELECT MAX(Broj_Slucajeva)
+    FROM (
+        SELECT COUNT(Id) AS Broj_Slucajeva
+        FROM Slucaj
+        GROUP BY VoditeljID
+    ) AS Max_voditelj
+);
 
 # POGLEDI
 # Pronađi sve policajce koji su vlasnici vozila koja su starija od 10 godina
@@ -529,6 +564,20 @@ LEFT JOIN KaznjivaDjela_u_Slucaju KDUS ON S.ID = KDUS.SlucajID
 LEFT JOIN KaznjivaDjela KD ON KDUS.KaznjivoDjeloID = KD.ID
 GROUP BY S.ID, S.Naziv;
 
+# Napiši view koji će za sve policijske službenike dohvatiti njihovu dob i godine staža (ukoliko je još aktivan, oduzimat ćemo od trenutne godine godinu zaposlenja, a ako je umirovljen, oduzimat će od godine umirovljenja godinu zaposlenja)
+# Onda dodat još stupac koji prati dali je umirovljen ili aktivan
+CREATE VIEW Pogled_Policijskih_Sluzbenika AS
+SELECT
+    o.Id AS Zaposlenik_Id,
+    o.Ime_Prezime AS Ime_Prezime,
+    o.Datum_rodjenja AS Datum_rodjenja,
+    DATEDIFF(CURRENT_DATE, z.Datum_zaposlenja) AS Godine_Staza,
+    CASE
+        WHEN z.Datum_izlaska_iz_sluzbe IS NOT NULL AND z.Datum_izlaska_iz_sluzbe <= CURRENT_DATE THEN 'Da'
+        ELSE 'Ne'
+    END AS Umirovljen
+FROM Osoba o
+INNER JOIN Zaposlenik z ON o.Id = z.Osoba_id;
 
 # Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
 DELIMITER //
@@ -831,18 +880,18 @@ BEGIN
     DECLARE osoba_ime_prezime VARCHAR(255);
     DECLARE rezultat VARCHAR(512);
     
-    -- Dohvati naziv slučaja
+    
     SELECT Slucaj.Naziv INTO slucaj_naziv
     FROM Slucaj
     WHERE Slucaj.DokazID = predmet_id;
     
-    -- Dohvati ime i prezime osobe povezane s predmetom
+    
     SELECT Osoba.Ime_Prezime INTO osoba_ime_prezime
     FROM Osoba
     INNER JOIN Slucaj ON Osoba.Id = Slucaj.PociniteljID
     WHERE Slucaj.DokazID = predmet_id;
     
-    -- Konkateniraj naziv slučaja i ime i prezime osobe
+    
     SET rezultat = CONCAT('Odabrani je predmet dokaz u slučaju: ', slucaj_naziv, ', gdje je osumnjičena osoba: ', osoba_ime_prezime);
     
     RETURN rezultat;
@@ -850,12 +899,44 @@ END //
 
 DELIMITER ;
 
+# Napravi funkciju koja će za argument primati sredstvo utvrđivanja istine, zatim će prebrojiti u koliko je slučajeva to sredstvo korišteno, prebrojit će koliko je slučajeva od tog broja riješeno, te će na temelju ta 2 podatka izračunati postotak rješenosti slučajeva gdje se odabrano sredstvo koristi
+DELIMITER //
+
+CREATE FUNCTION IzracunajPostotakRjesenosti (
+    sredstvo_id INT
+) RETURNS DECIMAL(5,2)
+DETERMINISTIC
+BEGIN
+    DECLARE ukupno INT;
+    DECLARE koristeno INT;
+    DECLARE postotak DECIMAL(5,2);
+    
+    
+    SELECT COUNT(*) INTO ukupno FROM Sui_slucaj WHERE Id_sui = sredstvo_id;
+    
+    
+    SELECT COUNT(*) INTO koristeno FROM Sui_slucaj s
+    INNER JOIN Slucaj c ON s.Id_slucaj = c.Id
+    WHERE s.Id_sui = sredstvo_id AND c.Status = 'Riješen';
+    
+    
+    IF ukupno IS NOT NULL AND ukupno > 0 THEN
+        SET postotak = (koristeno / ukupno) * 100;
+    ELSE
+        SET postotak = 0.00;
+    END IF;
+    
+    RETURN postotak;
+END //
+
+DELIMITER ;
+
 
 /* KILLCOUNT:
     18 tables
-    7 triggers
-    11 queries
-    10 views
-    5 functions
-    6 procedures
+    8 triggers
+    12 queries
+    11 views
+    6 functions
+    7 procedures
 */

@@ -1,0 +1,26 @@
+KARDINALITETI: 
+# MJESTO - PODRUČJE UPRAVE -> 1 mjesto je u jednom području uprave, a u jednom području uprave ima više mjesta
+# ZGRADA - MJESTO -> 1 zgrada je u jednom mjestu, a u jednom mjestu ima više zgrada
+# ZAPOSLENIK - ZAPOSLENIK -> jedan zaposlenik ima najviše 1 nadređenog, ali ne mora imati ni jednog. 1 nadređeni može imati više podređenih
+# ZAPOSLENIK - RADNO MJESTO -> jedan zaposlenik radi na 1 radnom mjestu, a na 1 radnom mjestu može biti više zaposlenika
+# ZAPOSLENIK - ODJEL -> jedan zaposlenik radi na 1 odjelu, a na 1 odjelu može biti više zaposlenika
+# ZAPOSLENIK - ZGRADA -> jedan zaposlenik radi u 1 zgradi, a u 1 zgradi može biti više zaposlenika
+# ZAPOSLENIK - MJESTO ->  jedan zaposlenik radi u 1 mjestu, a u 1 mjestu radi više zaposlenika
+# ZAPOSLENIK - OSOBA -> jedan zaposlenik može biti 1 osoba, a 1 osoba može biti 1 zaposlenik
+# VOZILO - VLASNIK -> jedno vozilo ima 1 vlasnika, a 1 vlasnik može imati više vozila
+# PREDMET - MJESTO PRONALASKA -> jedan predmet možemo pronaći na 1 mjestu, a na 1 mjestu možemo naći više predmeta
+# PAS - OSOBA -> jedan pas ima jednog trenera, a 1 trener može imati više pasa
+# PAS - KAŽNJIVO DJELO -> jedan pas je zadužen za 1 kazneno djelo, a za 1 kazneno djelo zaduženo je više pasa
+# SLUČAJ - OSOBA (izvjestitelj) -> jedan slučaj ima jednog izvjestitelja, a jedna osoba može biti izvjestitelj za više slučajeva
+# SLUČAJ - OSOBA (voditelj) -> jedan slučaj ima jednog voditelja, a jedna osoba može biti voditelj u više slučajeva
+# SLUČAJ - OSOBA (počinitelj) -> jedan slučaj ima jednog počinitelja, a jedna osoba može biti počinitelj za više slučajeva
+# SLUČAJ - PAS -> jedan slučaj može imati jednog aktivnog psa, a jedan pas može biti aktivan na više slučajeva
+# SLUČAJ - SVJEDOK -> jedan slučaj ima 1 ključnog svjedoka, a jedna osoba može biti ključni svjedok na više slučajeva
+# DOGAĐAJ - SLUČAJ -> jedan slučaj ima više događaja, a jedan se događaj može dogoditi u jednom slučaju
+# DOGAĐAJ - MJESTO -> na jednom mjestu se može dogoditi više događaja, a jedan se događaj može dogoditi na jednom mjestu
+# U više slučajeva se može dogoditi više kažnjivih djela, zato imamo novu tablicu
+# IZVJEŠTAJ - OSOBA -> Jedan izvještaj radi jedan autor, a jedan autor može napraviti više slučajeva
+# IZVJEŠTAJ - SLUČAJ -> Jedan izvještaj se radi za jedan slučaj, a za jedan se slučaj može napraviti više izvještaja
+# ZAPLJENA - SLUČAJ -> jedna se zapljena vrši u jednom slučaju, a u jednom se slučaju može vršiti više zapljena
+# ZAPLJENA - PREDMET -> u jednoj se zapljeni zapljeni 1 predmet, a 1 predmet se može zapljeniti za više slučajeva (** objašnjenje; zvuči nelogično, ali moguće je npr. zapljenit neki nož koji je korišten a) za ubojstvo u slučaju A, b) za pljačku u slučaju B, c) za nanošenje tjelesnih ozljeda u slučaju C, d) za nanošenje ozljeda u slučaju B itd.). Dakle, zapljenjen je jedan put, ali koristit ćemo ga kao dokaz za više slučajeva
+# U više slučajeva se može koristiti više SUI, pa zato imamo novu tablicu

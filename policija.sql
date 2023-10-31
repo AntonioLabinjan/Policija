@@ -4,179 +4,179 @@ USE Policija;
 
 # TABLICE
 CREATE TABLE Podrucje_uprave (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL UNIQUE
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naziv VARCHAR(255) NOT NULL UNIQUE
 );
 CREATE TABLE Mjesto (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL,
-    Id_Podrucje_Uprave INT,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naziv VARCHAR(255) NOT NULL,
+    id_podrucje_uprave INT,
     FOREIGN KEY (Id_Podrucje_Uprave) REFERENCES Podrucje_uprave(Id)
 );
 
 CREATE TABLE Zgrada (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Adresa VARCHAR(255) NOT NULL,
-    MjestoID INT,
-    Vrsta_zgrade VARCHAR(30),
-    FOREIGN KEY (MjestoID) REFERENCES Mjesto(ID)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    adresa VARCHAR(255) NOT NULL,
+    id_mjesto INT,
+    vrsta_zgrade VARCHAR(30),
+    FOREIGN KEY (id_mjesto) REFERENCES Mjesto(ID)
 );
 
 CREATE TABLE  Radno_mjesto(
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Vrsta VARCHAR(255) NOT NULL,
-    Dodatne_informacije TEXT
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    vrsta VARCHAR(255) NOT NULL,
+    dodatne_informacije TEXT
 );
 
 CREATE TABLE Odjeli (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL UNIQUE,
-    Opis TEXT
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naziv VARCHAR(255) NOT NULL UNIQUE,
+    opis TEXT
 );
 
 CREATE TABLE Osoba (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Ime_Prezime VARCHAR(255) NOT NULL,
-    Datum_rodjenja DATE NOT NULL,
-    Spol VARCHAR(10) NOT NULL,
-    Adresa VARCHAR(255) NOT NULL,
-    Fotografija BLOB,
-    Telefon VARCHAR(20) NOT NULL,
-    Email VARCHAR(255) NOT NULL UNIQUE
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ime_prezime VARCHAR(255) NOT NULL,
+    datum_rodenja DATE NOT NULL,
+    spol VARCHAR(10) NOT NULL,
+    adresa VARCHAR(255) NOT NULL,
+    fotografija BLOB,
+    telefon VARCHAR(20) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
     );
 
 CREATE TABLE Zaposlenik (
-  Id INT AUTO_INCREMENT PRIMARY KEY,
-  Datum_zaposlenja DATETIME NOT NULL,
-  Datum_izlaska_iz_sluzbe DATETIME, # ovo može biti NULL ako nije izašao iz službe
-  Nadređeni_id INT,
-  Radno_mjesto_id INT,
-  Odjel_id INT,
-  Zgrada_id INT,
-  Mjesto_id INT,
-  Osoba_id INT,
-  FOREIGN KEY (Nadređeni_id) REFERENCES Zaposlenik(Id), 
-  FOREIGN KEY (Radno_mjesto_id) REFERENCES Radno_mjesto (Id),
-  FOREIGN KEY (Odjel_id) REFERENCES Odjeli (Id),
-  FOREIGN KEY (Zgrada_id) REFERENCES Zgrada (Id), # ovo je tipa zatvor di se nalazi/postaja di dela itd.
-  FOREIGN KEY (Mjesto_id) REFERENCES Mjesto(Id),
-  FOREIGN KEY (Osoba_id) REFERENCES Osoba(Id)
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  datum_zaposlenja DATETIME NOT NULL,
+  datum_izlaska_iz_sluzbe DATETIME, # ovo može biti NULL ako nije izašao iz službe
+  id_nadređeni INT,
+  id_radno_mjesto INT,
+  id_odjel INT,
+  id_zgrada INT,
+  id_mjesto INT,
+  id_osoba INT,
+  FOREIGN KEY (id_nadređeni) REFERENCES Zaposlenik(id), 
+  FOREIGN KEY (id_radno_mjesto) REFERENCES Radno_mjesto(id),
+  FOREIGN KEY (id_odjel) REFERENCES Odjeli(id),
+  FOREIGN KEY (id_zgrada) REFERENCES Zgrada(id), # ovo je tipa zatvor di se nalazi/postaja di dela itd.
+  FOREIGN KEY (id_mjesto) REFERENCES Mjesto(id),
+  FOREIGN KEY (id_osoba) REFERENCES Osoba(id)
 );
 	
 CREATE TABLE Vozilo (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Marka VARCHAR(255) NOT NULL,
-    Model VARCHAR(255) NOT NULL,
-    Registracija VARCHAR(20) UNIQUE,
-    Godina_proizvodnje INT NOT NULL,
-    Službeno_vozilo BOOLEAN, # je li službeno ili ne
-    Vlasnik_id INT NOT NULL, # ovaj FK se odnosi na privatna/osobna vozila
-    FOREIGN KEY (Vlasnik_id) REFERENCES Osoba(Id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    marka VARCHAR(255) NOT NULL,
+    model VARCHAR(255) NOT NULL,
+    registracija VARCHAR(20) UNIQUE,
+    godina_proizvodnje INT NOT NULL,
+    sluzbeno_vozilo BOOLEAN, # je li službeno ili ne
+    id_vlasnik INT NOT NULL, # ovaj FK se odnosi na privatna/osobna vozila
+    FOREIGN KEY (id_vlasnik) REFERENCES Osoba(id)
 );
 
 
 CREATE TABLE Predmet (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL,
-    Id_Mjesto_Pronalaska INT,
-    FOREIGN KEY (Id_Mjesto_Pronalaska) REFERENCES Mjesto(Id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naziv VARCHAR(255) NOT NULL,
+    id_mjesto_pronalaska INT,
+    FOREIGN KEY (id_mjesto_pronalaska) REFERENCES Mjesto(id)
 );
 
-CREATE TABLE KaznjivaDjela (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL UNIQUE,
-    Opis TEXT NOT NULL,
-    Predviđena_kazna INT
+CREATE TABLE Kaznjiva_djela (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naziv VARCHAR(255) NOT NULL UNIQUE,
+    opis TEXT NOT NULL,
+    predvidena_kazna INT
 );
 
 CREATE TABLE Pas (
-    Id INTEGER AUTO_INCREMENT PRIMARY KEY,
-    Id_trener INTEGER, # to je osoba zadužena za rad s psom
-    Oznaka VARCHAR(255) UNIQUE, # pretpostavljan da je ovo unikatno za svakega psa; ima mi logike 
-    Dob INTEGER NOT NULL,
-    Status VARCHAR(255),
-    Id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.
-    FOREIGN KEY (Id_trener) REFERENCES Osoba(Id),
-    FOREIGN KEY (Id_kaznjivo_djelo) REFERENCES Kaznjivadjela(ID)
+    id INTEGER AUTO_INCREMENT PRIMARY KEY,
+    id_trener INTEGER, # to je osoba zadužena za rad s psom
+    oznaka VARCHAR(255) UNIQUE, # pretpostavljan da je ovo unikatno za svakega psa; ima mi logike 
+    dob INTEGER NOT NULL,
+    status VARCHAR(255),
+    id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.
+    FOREIGN KEY (id_trener) REFERENCES Osoba(id),
+    FOREIGN KEY (id_kaznjivo_djelo) REFERENCES Kaznjiva_djela(id)
     );
 
 CREATE TABLE Slucaj (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(255) NOT NULL,
-    Opis TEXT,
-    Pocetak DATETIME NOT NULL,
-    Zavrsetak DATETIME NOT NULL,
-    Status VARCHAR(20),
-    PociniteljID INT,
-    IzvjestiteljID INT,
-    VoditeljID INT,
-    DokazID INT,
-    UkupnaVrijednostZapljena INT,
-    Pas_id INT,
-    Svjedok_id INT,
-    FOREIGN KEY (IzvjestiteljID) REFERENCES Osoba(Id),
-    FOREIGN KEY (VoditeljID) REFERENCES Zaposlenik(Id),
-    FOREIGN KEY (DokazID) REFERENCES Predmet(Id),
-    FOREIGN KEY (PociniteljID) REFERENCES Osoba(Id),
-    FOREIGN KEY (Pas_id) REFERENCES Pas(Id),
-    FOREIGN KEY (Svjedok_id) REFERENCES Osoba(Id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naziv VARCHAR(255) NOT NULL,
+    opis TEXT,
+    pocetak DATETIME NOT NULL,
+    zavrsetak DATETIME NOT NULL,
+    status VARCHAR(20),
+    id_pocinitelj INT,
+    id_izvjestitelj INT,
+    id_voditelj INT,
+    id_dokaz INT,
+    ukupna_vrijednost_zapljena INT,
+    id_pas INT,
+    id_svjedok INT,
+	FOREIGN KEY (id_pocinitelj) REFERENCES Osoba(id),
+    FOREIGN KEY (id_izvjestitelj) REFERENCES Osoba(id),
+    FOREIGN KEY (id_voditelj) REFERENCES Zaposlenik(id),
+    FOREIGN KEY (id_dokaz) REFERENCES Predmet(id),
+    FOREIGN KEY (id_pas) REFERENCES Pas(id),
+    FOREIGN KEY (id_svjedok) REFERENCES Osoba(id)
 );
 
-CREATE TABLE EvidencijaDogadaja (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    SlucajID INT,
-    OpisDogadjaja TEXT NOT NULL,
-    DatumVrijeme DATETIME NOT NULL,
-    MjestoId INT NOT NULL,
-    FOREIGN KEY (SlucajID) REFERENCES Slucaj(Id),
-    FOREIGN KEY (MjestoId) REFERENCES Mjesto(Id)
+CREATE TABLE Evidencija_dogadaja (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_slucaj INT,
+    opis_dogadaja TEXT NOT NULL,
+    datum_vrijeme DATETIME NOT NULL,
+    id_mjesto INT NOT NULL,
+    FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
+    FOREIGN KEY (id_mjesto) REFERENCES Mjesto(id)
 );
 
 
 
-CREATE TABLE KaznjivaDjela_u_Slucaju (
-	ID INT AUTO_INCREMENT PRIMARY KEY,
-    SlucajID INT,
-    KaznjivoDjeloID INT,
-    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID),
-    FOREIGN KEY (KaznjivoDjeloID) REFERENCES KaznjivaDjela(ID)
+CREATE TABLE Kaznjiva_djela_u_slucaju (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    id_slucaj INT,
+    id_kaznjivo_djelo INT,
+    FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
+    FOREIGN KEY (id_kaznjivo_djelo) REFERENCES Kaznjiva_djela(id)
 );
 
 
 
 
 CREATE TABLE Izvjestaji (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Naslov VARCHAR(255) NOT NULL,
-    Sadržaj TEXT,
-    AutorID INT,
-    SlucajID INT,
-    FOREIGN KEY (AutorID) REFERENCES Osoba(ID),
-    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naslov VARCHAR(255) NOT NULL,
+    sadrzaj TEXT,
+    id_autor INT,
+    id_slucaj INT,
+    FOREIGN KEY (id_autor) REFERENCES Osoba(id),
+    FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
 );
 
 CREATE TABLE Zapljene (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Opis TEXT,
-    SlucajID INT,
-    PredmetID INT,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    opis TEXT,
+    id_slucaj INT,
+    id_predmet INT,
     Vrijednost NUMERIC (5,2),
-    FOREIGN KEY (SlucajID) REFERENCES Slucaj(ID),
-    FOREIGN KEY (PredmetID) REFERENCES Predmet(ID)
+    FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
+    FOREIGN KEY (id_predmet) REFERENCES Predmet(id)
 );
 
 CREATE TABLE Sredstvo_utvrdivanja_istine ( # ovo je tipa poligraf, alkotest i sl.
-	Id INT AUTO_INCREMENT PRIMARY KEY,
-    Naziv VARCHAR(100) NOT NULL
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    naziv VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE Sui_slucaj (
-	ID INT AUTO_INCREMENT PRIMARY KEY,
-    Id_sui INT,
-    Id_slucaj INT,
-    FOREIGN KEY (Id_sui) REFERENCES Sredstvo_utvrdivanja_istine (Id),
-    FOREIGN KEY (Id_slucaj) REFERENCES Slucaj (Id)
-);
+	id INT AUTO_INCREMENT PRIMARY KEY,
+    id_sui INT,
+    id_slucaj INT,
+    FOREIGN KEY (id_sui) REFERENCES Sredstvo_utvrdivanja_istine(id),
+    FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
+)
 
 
 # TRIGERI
@@ -214,11 +214,11 @@ BEGIN
     
     SELECT SUM(P.Vrijednost) INTO ukupno
     FROM Predmet P
-    WHERE P.ID = NEW.PredmetID;
+    WHERE P.ID = NEW.id_predmet;
 
     UPDATE Slucaj
     SET UkupnaVrijednostZapljena = ukupno
-    WHERE ID = NEW.SlucajID;
+    WHERE ID = NEW.id_slucaj;
 END;
 //
 DELIMITER ;
@@ -243,7 +243,7 @@ CREATE TRIGGER ProvjeraHijerarhije
 BEFORE INSERT ON Zaposlenik
 FOR EACH ROW
 BEGIN
-    IF NEW.Nadređeni_id IS NOT NULL AND NEW.Nadređeni_id = NEW.Id THEN
+    IF NEW.id_nadređeni IS NOT NULL AND NEW.id_nadređeni = NEW.Id THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Nadređeni ne može biti ista osoba kao i podređeni.';
     END IF;
@@ -286,7 +286,7 @@ BEFORE INSERT ON Slucaj
 FOR EACH ROW
 BEGIN
     DECLARE PasStatus VARCHAR(255);
-    SELECT Status INTO PasStatus FROM Pas WHERE Id = NEW.Pas_id;
+    SELECT Status INTO PasStatus FROM Pas WHERE Id = NEW.id_pas;
     
     IF PasStatus = 'Časno umirovljen' THEN
         SIGNAL SQLSTATE '45000'
@@ -313,7 +313,7 @@ BEGIN
     -- Dohvati datum rođenja osobe povezane s slučajem
     SELECT Osoba.Datum_rodjenja INTO datum_rodjenja
     FROM Osoba
-    WHERE Osoba.Id = NEW.PociniteljID;
+    WHERE Osoba.Id = NEW.id_pocinitelj;
     
     -- Izračunaj trenutnu godinu
     SET godina_danas = YEAR(NOW());
@@ -339,7 +339,7 @@ CREATE TRIGGER Provjeri_Punoljetnost_Vlasnika
 BEFORE INSERT ON Vozilo FOR EACH ROW
 BEGIN
     DECLARE vlasnik_godine INT;
-    SELECT TIMESTAMPDIFF(YEAR, (SELECT Datum_rodjenja FROM Osoba WHERE Id = NEW.Vlasnik_id), CURDATE()) INTO vlasnik_godine;
+    SELECT TIMESTAMPDIFF(YEAR, (SELECT Datum_rodjenja FROM Osoba WHERE Id = NEW.id_vlasnik), CURDATE()) INTO vlasnik_godine;
 
     IF vlasnik_godine < 18 THEN
         SIGNAL SQLSTATE '45000'
@@ -357,82 +357,83 @@ DELIMITER ;
 # Ispišimo sve voditelje slučajeva i slučajeve koje vode
 SELECT O.Ime_Prezime, S.Naziv AS 'Naziv slučaja'
 FROM Zaposlenik Z
-JOIN Osoba O ON Z.Osoba_id = O.Id
-JOIN Slucaj S ON Z.Id = S.VoditeljID;
+JOIN Osoba O ON Z.id_osoba = O.Id
+JOIN Slucaj S ON Z.Id = S.id_voditelj;
 
 
 # Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
-SELECT S.Naziv AS 'Naziv slučaja', ED.OpisDogadjaja, ED.DatumVrijeme, ED.MjestoId
+SELECT S.Naziv AS 'Naziv slučaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto
 FROM Slucaj S
-JOIN EvidencijaDogadaja ED ON S.Id = ED.SlucajID
-JOIN Osoba O ON O.Id = S.PociniteljID 
+JOIN Evidencija_dogadaja ED ON S.Id = ED.id_slucaj
+JOIN Osoba O ON O.Id = S.id_pocinitelj
 WHERE O.Ime_Prezime = 'Ime Prezime';
 
 # Ispišimo sve osobe koje su osumnjičene za određeno KD
 SELECT DISTINCT O.Ime_Prezime
 FROM Osoba O
-JOIN Slucaj S ON O.Id = S.PociniteljID
-JOIN KaznjivaDjela_u_Slucaju KD ON S.Id = KD.SlucajID
-JOIN KaznjivaDjela K ON KD.KaznjivoDjeloID = K.Id
+JOIN Slucaj S ON O.Id = S.id_pocinitelj
+JOIN Kaznjiva_djela_u_slucaju	KD ON S.Id = KD.id_slucaj
+JOIN Kaznjiva_djela	K ON KD.id_kaznjivo_djelo = K.id
 WHERE K.Naziv = 'Naziv kaznenog djela';
 
 # Pronađimo sve slučajeve koji sadrže KD i nisu riješeni
-SELECT Slucaj.Naziv, KaznjivaDjela.Naziv AS KaznjivoDjelo
+SELECT Slucaj.Naziv, Kaznjiva_djela.Naziv AS KaznjivoDjelo
 FROM Slucaj
-INNER JOIN KaznjivaDjela_u_Slucaju ON Slucaj.ID = KaznjivaDjela_u_Slucaju.SlucajID
-INNER JOIN KaznjivaDjela ON KaznjivaDjela_u_Slucaju.KaznjivoDjeloID = KaznjivaDjela.ID
+INNER JOIN Kaznjiva_djela_u_slucaju	ON Slucaj.ID = Kaznjiva_djela_u_slucaju.id_slucaj
+INNER JOIN Kaznjiva_djela ON 
+Kaznjiva_djela_u_slucaju.id_kaznjivo_djelo= Kaznjiva_djela.id
 WHERE Slucaj.Status = 'Aktivan';
 
 # Izračunajmo iznos zapljene za svaki pojedini slučaj
 SELECT Slucaj.Naziv, SUM(Zapljene.Vrijednost) AS UkupnaVrijednostZapljena
 FROM Slucaj
-LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.SlucajID
+LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.id_slucaj
 GROUP BY Slucaj.ID;
 
 # Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska)
 SELECT K.Naziv, K.Opis
-FROM KaznjivaDjela_u_Slucaju KS
-JOIN KaznjivaDjela K ON KS.KaznjivoDjeloID = K.ID
-JOIN EvidencijaDogadaja ED ON KS.SlucajID = ED.SlucajID
-WHERE ED.MjestoId = 1; 
+FROM Kaznjiva_Djela_u_Slucaju KS
+JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo= K.ID
+JOIN Evidencija_Dogadaja ED ON KS.id_slucaj= ED.id_slucaj
+WHERE ED.id_mjesto=1;
 
 # Nađimo  sve događaje koji uključuju pojedino kažnjivo djelo
-SELECT E.OpisDogadjaja, E.DatumVrijeme
-FROM EvidencijaDogadaja E
-JOIN Slucaj S ON E.SlucajID = S.Id
-JOIN KaznjivaDjela_u_Slucaju KS ON S.Id = KS.SlucajID
-WHERE KS.KaznjivoDjeloID = 1;
+SELECT E.Opis_Dogadaja, E.Datum_Vrijeme
+FROM Evidencija_Dogadaja E
+JOIN Slucaj S ON E.id_slucaj = S.Id
+JOIN Kaznjiva_Djela_u_Slucaju KS ON S.Id = KS.id_slucaj
+WHERE KS.id_kaznjivo_djelo = 1; # ovo moremo izmjenit
 
 # Pronađi prosječnu vrijednost zapljene za pojedina kaznena djela
 SELECT K.Naziv AS VrstaKaznenogDjela, AVG(Z.Vrijednost) AS ProsječnaVrijednostZapljene
-FROM KaznjivaDjela_u_Slucaju KS
-JOIN KaznjivaDjela K ON KS.KaznjivoDjeloID = K.ID
-JOIN Zapljene Z ON KS.SlucajID = Z.SlucajID
+FROM Kaznjiva_Djela_u_Slucaju KS
+JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo= K.ID
+JOIN Zapljene Z ON KS.id_slucaj	= Z.id_slucaj
 GROUP BY K.Naziv;
 
 # Pronađi sve odjele i broj zaposlenika na njima
 SELECT O.Naziv AS NazivOdjela, COUNT(Z.Id) AS BrojZaposlenika
 FROM Zaposlenik Z
-JOIN Odjeli O ON Z.Odjel_id = O.Id
+JOIN Odjeli O ON Z.id_odjel	 = O.Id
 GROUP BY O.id, O.Naziv;
 
 # Pronađi ukupnu vrijednost zapljena po odjelu i sortiraj ih po vrijednosti silazno
-SELECT Z.Odjel_id, SUM(ZP.Vrijednost) AS UkupnaVrijednostZapljena
+SELECT Z.id_odjel, SUM(ZP.Vrijednost) AS UkupnaVrijednostZapljena
 FROM Slucaj S
-JOIN Zapljene ZP ON S.Id = ZP.SlucajID
-JOIN Zaposlenik Z ON S.VoditeljID = Z.Id
-GROUP BY Z.Odjel_id
+JOIN Zapljene ZP ON S.Id = ZP.id_slucaj
+JOIN Zaposlenik Z ON S.id_voditelj= Z.Id
+GROUP BY Z.id_odjel
 ORDER BY UkupnaVrijednostZapljena DESC;
 
 
 
 # Pronađi osobu koja mora odslužiti najveću ukupnu zatvorsku kaznu
-SELECT O.Id, O.Ime_Prezime, SUM(KD.Predviđena_kazna) AS Ukupna_kazna
+SELECT O.Id, O.Ime_Prezime, SUM(KD.Predvidena_kazna) AS Ukupna_kazna
 FROM Osoba O
-INNER JOIN Slucaj S ON O.Id = S.PociniteljID
-INNER JOIN KaznjivaDjela_u_Slucaju KS ON S.Id = KS.SlucajID
-INNER JOIN KaznjivaDjela KD ON KS.KaznjivoDjeloID = KD.ID
-WHERE KD.Predviđena_kazna IS NOT NULL
+INNER JOIN Slucaj S ON O.Id = S.id_pocinitelj
+INNER JOIN Kaznjiva_Djela_u_Slucaju KS ON S.Id = KS.id_slucaj
+INNER JOIN Kaznjiva_Djela KD ON KS.id_kaznjivo_djelo= KD.ID
+WHERE KD.Predvidena_kazna IS NOT NULL
 GROUP BY O.Id, O.Ime_Prezime
 ORDER BY Ukupna_kazna DESC
 LIMIT 1;
@@ -443,25 +444,25 @@ SELECT
     o.Ime_Prezime AS Ime_Prezime,
     COUNT(s.Id) AS Broj_Slucajeva
 FROM Zaposlenik z
-JOIN Osoba o ON z.Osoba_id = o.Id
-LEFT JOIN Slucaj s ON s.VoditeljID = z.Id
+JOIN Osoba o ON z.id_osoba= o.Id
+LEFT JOIN Slucaj s ON s.id_voditelj	 = z.Id
 GROUP BY z.Id, o.Ime_Prezime
 HAVING COUNT(s.Id) = (
     SELECT MAX(Broj_Slucajeva)
     FROM (
         SELECT COUNT(Id) AS Broj_Slucajeva
         FROM Slucaj
-        GROUP BY VoditeljID
+        GROUP BY id_voditelj
     ) AS Max_voditelj
 );
 
 # Ispiši sva mjesta gdje nema evidentiranih kaznjivih djela u slučajevima(ili uopće nema slučajeva)
 SELECT M.Id, M.Naziv
 FROM Mjesto M
-LEFT JOIN EvidencijaDogadaja ED ON M.Id = ED.MjestoId
-LEFT JOIN Slucaj S ON ED.SlucajID = S.Id
-LEFT JOIN KaznjivaDjela_u_Slucaju KDS ON S.Id = KDS.SlucajID
-WHERE KDS.SlucajID IS NULL OR KDS.KaznjivoDjeloID IS NULL
+LEFT JOIN Evidencija_dogadaja ED ON M.Id = ED.id_mjesto
+LEFT JOIN Slucaj S ON ED.id_slucaj= S.Id
+LEFT JOIN Kaznjiva_Djela_u_Slucaju KDS ON S.Id = KDS.id_slucaj
+WHERE KDS.id_slucaj IS NULL OR KDS.id_kaznjivo_djelo		 IS NULL
 GROUP BY M.Id, M.Naziv;
 
 
@@ -470,19 +471,19 @@ GROUP BY M.Id, M.Naziv;
 CREATE VIEW PolicajciSaStarimVozilima AS
 SELECT O.Ime_Prezime AS Policajac, V.Marka, V.Model, V.Godina_proizvodnje
 FROM Osoba O
-JOIN Zaposlenik Z ON O.Id = Z.Osoba_id
-JOIN Vozilo V ON O.Id = V.Vlasnik_id
-WHERE Z.Radno_mjesto_id = (SELECT Id FROM Radno_mjesto WHERE Vrsta = 'Policajac')
+JOIN Zaposlenik Z ON O.Id = Z.id_osoba
+JOIN Vozilo V ON O.Id = V.id_vlasnik
+WHERE Z.id_radno_mjesto= (SELECT Id FROM Radno_mjesto WHERE Vrsta = 'Policajac')
 AND V.Godina_proizvodnje <= YEAR(NOW()) - 10;
 
 # Napravi pogled koji će pronaći sve osobe koje su počinile kazneno djelo pljačke i pri tome su koristili pištolj (to dohvati pomoću tablice predmet) i nazovi pogled "Počinitelji oružane pljačke"
 CREATE VIEW PočiniteljiOružanePljačke AS
 SELECT O.Ime_Prezime AS Počinitelj, K.Naziv AS KaznenoDjelo
 FROM Osoba O
-JOIN Slucaj S ON O.Id = S.PociniteljID
-JOIN KaznjivaDjela_u_Slucaju KD ON S.Id = KD.SlucajID
-JOIN KaznjivaDjela K ON KD.KaznjivoDjeloID = K.ID
-JOIN Predmet P ON S.DokazID = P.Id
+JOIN Slucaj S ON O.Id = S.id_pocinitelj
+JOIN Kaznjiva_Djela_u_Slucaju KD ON S.Id = KD.id_slucaj
+JOIN Kaznjiva_Djela K ON KD.id_kaznjivo_djelo			= K.ID
+JOIN Predmet P ON S.id_dokaz= P.Id
 WHERE K.Naziv = 'Pljačka' AND P.Naziv LIKE '%pištolj%';
 
 
@@ -490,14 +491,14 @@ WHERE K.Naziv = 'Pljačka' AND P.Naziv LIKE '%pištolj%';
 CREATE VIEW PostotakPojavljivanjaKaznenihDjela AS
 SELECT
     KD.Naziv AS 'Kazneno_Djelo',
-    COUNT(KS.SlucajID) AS 'Broj_Slucajeva',
-    COUNT(KS.SlucajID) / (SELECT COUNT(*) FROM Slucaj) * 100 AS 'Postotak_Pojavljivanja'
+    COUNT(KS.id_slucaj) AS 'Broj_Slucajeva',
+    COUNT(KS.id_slucaj) / (SELECT COUNT(*) FROM Slucaj) * 100 AS 'Postotak_Pojavljivanja'
 FROM
-    KaznjivaDjela KD
+    Kaznjiva_Djela KD
 LEFT JOIN
-    KaznjivaDjela_u_Slucaju KS
+    Kaznjiva_Djela_u_Slucaju KS
 ON
-    KD.ID = KS.KaznjivoDjeloID
+    KD.ID = KS.id_kaznjivo_djelo
 GROUP BY
     KD.Naziv;
 
@@ -524,21 +525,22 @@ ORDER BY Trajanje_u_danima DESC;
 
 # Napiši pogled koji će u jednu tablicu pohraniti sve izvještaje vezane uz pojedine slučajeve
 CREATE VIEW IzvjestajiZaSlucajeve AS
-SELECT S.Naziv AS Slucaj, I.Naslov AS NaslovIzvjestaja, I.Sadržaj AS SadržajIzvjestaja, O.Ime_Prezime AS AutorIzvjestaja
+SELECT S.Naziv AS Slucaj, I.Naslov AS NaslovIzvjestaja, I.Sadrzaj AS SadržajIzvjestaja, O.Ime_Prezime AS AutorIzvjestaja
 FROM Izvjestaji I
-INNER JOIN Slucaj S ON I.SlucajID = S.ID
-INNER JOIN Osoba O ON I.AutorID = O.Id;
+INNER JOIN Slucaj S ON I.id_slucaj	 = S.ID
+INNER JOIN Osoba O ON I.id_autor	= O.Id;
 
 # Napravi pogled koji će izlistati sve osobe i njihove odjele. Ukoliko osoba nije policajac te nema odjel (odjel je NULL), neka se uz tu osobu napiše "Osoba nije policijski službenik"
 CREATE VIEW OsobeIOdjeli AS
 SELECT O.Ime_Prezime AS ImeOsobe,
        CASE
-           WHEN Z.Radno_mjesto_id IS NOT NULL THEN OD.Naziv
+           WHEN Z.id_radno_mjesto
+           IS NOT NULL THEN OD.Naziv
            ELSE 'Osoba nije policijski službenik'
        END AS NazivOdjela
 FROM Osoba O
-LEFT JOIN Zaposlenik Z ON O.Id = Z.Osoba_id
-LEFT JOIN Odjeli OD ON Z.Odjel_id = OD.Id;
+LEFT JOIN Zaposlenik Z ON O.Id = Z.id_osoba
+LEFT JOIN Odjeli OD ON Z.id_odjel= OD.Id;
 
 
 # Napravi pogled koji će ispisati sve voditelje slučajeva, ukupan broj slučajeva koje vode, ukupan broj rješenjih slučajeva, ukupan broj nerješenih slučajeva i postotak rješenosti
@@ -552,7 +554,7 @@ SELECT
 FROM
     Osoba O
 LEFT JOIN
-    Slucaj S ON O.ID = S.VoditeljID
+    Slucaj S ON O.ID = S.id_voditelj
 GROUP BY
     Voditelj;
 
@@ -565,9 +567,9 @@ SELECT
     MIN(Z.Vrijednost) AS 'Najmanja_vrijednost_zapljena',
     COUNT(Z.ID) AS 'Broj_zapljenjenih_predmeta'
 FROM Zapljene Z
-JOIN Slucaj S ON Z.SlucajID = S.ID
-JOIN KaznjivaDjela_u_Slucaju KDUS ON S.ID = KDUS.SlucajID
-JOIN KaznjivaDjela K ON KDUS.KaznjivoDjeloID = K.ID
+JOIN Slucaj S ON Z.id_slucaj	 = S.ID
+JOIN Kaznjiva_Djela_u_Slucaju KDUS ON S.ID = KDUS.id_slucaj
+JOIN Kaznjiva_Djela K ON KDUS.id_kaznjivo_djelo = K.id
 GROUP BY K.Naziv;
 
 
@@ -579,16 +581,16 @@ CREATE VIEW UkupnaPredvidenaKaznaPoSlucaju AS
 SELECT S.ID AS 'SlucajID',
        S.Naziv AS 'NazivSlucaja',
        CASE
-           WHEN SUM(KD.Predviđena_kazna) > 50 THEN 50
-           ELSE SUM(KD.Predviđena_kazna)
+           WHEN SUM(KD.Predvidena_kazna) > 50 THEN 50
+           ELSE SUM(KD.Predvidena_kazna)
        END AS 'UkupnaPredvidenaKazna',
        CASE
-           WHEN SUM(KD.Predviđena_kazna) > 50 THEN 'Maksimalna zakonska zatvorska kazna iznosi 50 godina'
+           WHEN SUM(KD.Predvidena_kazna) > 50 THEN 'Maksimalna zakonska zatvorska kazna iznosi 50 godina'
            ELSE NULL
        END AS 'Napomena'
 FROM Slucaj S
-LEFT JOIN KaznjivaDjela_u_Slucaju KDUS ON S.ID = KDUS.SlucajID
-LEFT JOIN KaznjivaDjela KD ON KDUS.KaznjivoDjeloID = KD.ID
+LEFT JOIN Kaznjiva_Djela_u_Slucaju KDUS ON S.ID = KDUS.id_slucaj
+LEFT JOIN Kaznjiva_Djela KD ON KDUS.id_kaznjivo_djelo		= KD.ID
 GROUP BY S.ID, S.Naziv;
 
 # Napiši view koji će za sve policijske službenike dohvatiti njihovu dob i godine staža (ukoliko je još aktivan, oduzimat ćemo od trenutne godine godinu zaposlenja, a ako je umirovljen, oduzimat će od godine umirovljenja godinu zaposlenja)
@@ -597,14 +599,14 @@ CREATE VIEW Pogled_Policijskih_Sluzbenika AS
 SELECT
     o.Id AS Zaposlenik_Id,
     o.Ime_Prezime AS Ime_Prezime,
-    o.Datum_rodjenja AS Datum_rodjenja,
+    o.Datum_rodenja AS Datum_rodenja,
     DATEDIFF(CURRENT_DATE, z.Datum_zaposlenja) AS Godine_Staza,
     CASE
         WHEN z.Datum_izlaska_iz_sluzbe IS NOT NULL AND z.Datum_izlaska_iz_sluzbe <= CURRENT_DATE THEN 'Da'
         ELSE 'Ne'
     END AS Umirovljen
 FROM Osoba o
-INNER JOIN Zaposlenik z ON o.Id = z.Osoba_id;
+INNER JOIN Zaposlenik z ON o.Id = z.id_osoba;
 
 # Napravi pogled koji će izlistati sve pse i broj slučajeva na kojima je svaki od njih radio. U poseban stupac dodaj broj riješenih slučajeva od onih na kojima su radili. Zatim izračunaj postotak rješenosti slučajeva za svakog psa i to dodaj u novi stupac
 CREATE VIEW Pregled_Pasa AS
@@ -617,7 +619,7 @@ SELECT
     (SUM(CASE WHEN S.Status = 'Završeno' THEN 1 ELSE 0 END) / COUNT(S.Id) * 100) AS PostotakRjesenosti
 FROM
     Pas AS P
-LEFT JOIN Slucaj AS S ON P.Id = S.Pas_id
+LEFT JOIN Slucaj AS S ON P.Id = S.id_pas
 LEFT JOIN Osoba AS O ON P.Id_trener = O.Id
 GROUP BY
     P.Id;
@@ -625,7 +627,7 @@ GROUP BY
 # Nadogradi prethodni view tako da pronalazi najefikasnijeg psa, s najvećim postotkom rješenosti
 CREATE VIEW NajefikasnijiPas AS
 SELECT
-    PasID,
+    PasId,
     OznakaPsa,
     Vlasnik,
     BrojSlucajeva,
@@ -691,13 +693,13 @@ DELIMITER //
 CREATE PROCEDURE Godisnje_nagrađivanje_pasa()
 BEGIN
     
-    CREATE TEMPORARY TABLE Temp_Psi (PasID INT, BrojSlucajeva INT);
+    CREATE TEMPORARY TABLE Temp_Psi (id_pas	INT, BrojSlucajeva INT);
 
     
-    INSERT INTO Temp_Psi (PasID, BrojSlucajeva)
-    SELECT Pas_id, COUNT(*) AS BrojSlucajeva
+    INSERT INTO Temp_Psi (id_pas, BrojSlucajeva)
+    SELECT id_pas, COUNT(*) AS BrojSlucajeva
     FROM Slucaj
-    GROUP BY Pas_id;
+    GROUP BY id_pas;
 
     
     ALTER TABLE Pas ADD COLUMN Status VARCHAR(255);
@@ -705,7 +707,7 @@ BEGIN
     
     UPDATE Pas
     SET Status = 'nagrađeni pas'
-    WHERE Id IN (SELECT PasID FROM Temp_Psi WHERE BrojSlucajeva > 15);
+    WHERE Id IN (SELECT	id_pas  FROM Temp_Psi WHERE BrojSlucajeva > 15);
     
     
     DROP TEMPORARY TABLE Temp_Psi;
@@ -762,13 +764,13 @@ BEGIN
 
     SELECT COUNT(*) INTO počinitelj_count
     FROM Slucaj
-    WHERE PociniteljID = osoba_id;
+    WHERE id_pocinitelj	= osoba_id;
 
     IF počinitelj_count > 0 THEN
         SET obavijest = 'Osoba je kažnjavana';
         SELECT obavijest AS Poruka;
     ELSE
-        INSERT INTO Izvjestaji (Naslov, Sadržaj, AutorID, SlucajID)
+        INSERT INTO Izvjestaji (Naslov, Sadržaj, id_autor, id_slucaj)
         VALUES ('Potvrda o nekažnjavanju', CONCAT('Osoba ', osoba_ime_prezime, ' nije kažnjavana. Izdana ', DATE_FORMAT(izdavanje_datum, '%d-%m-%Y %H:%i:%s')), osoba_id, NULL);
         SELECT CONCAT('Potvrda za ', osoba_ime_prezime) AS Poruka;
     END IF;
@@ -780,19 +782,19 @@ DELIMITER ;
 DELIMITER //
 
 CREATE PROCEDURE IzmjeniKontaktInformacije(
-    IN osoba_id INT,
+    IN id_osoba INT,
     IN novi_email VARCHAR(255),
     IN novi_telefon VARCHAR(20)
 )
 BEGIN
     -- Provjeri postoji li osoba s navedenim ID-jem
     DECLARE br_osoba INT;
-    SELECT COUNT(*) INTO br_osoba FROM Osoba WHERE Id = osoba_id;
+    SELECT COUNT(*) INTO br_osoba FROM Osoba WHERE Id = id_osoba;
     
     IF br_osoba > 0 THEN
         UPDATE Osoba
         SET Email = novi_email, Telefon = novi_telefon
-        WHERE Id = osoba_id;
+        WHERE Id = id_osoba;
         
         SELECT 'Kontakt informacije su uspješno izmijenjene' AS Poruka;
     ELSE
@@ -805,36 +807,35 @@ DELIMITER ;
 # Napiši proceduru koja će za određeni slučaj izlistati sve događaje koji su se u njemu dogodili i poredati ih kronološki
 DELIMITER //
 
-CREATE PROCEDURE Izlistaj_dogadjaje(IN slucajID INT)
+CREATE PROCEDURE Izlistaj_dogadjaje(IN id_slucaj INT)
 BEGIN
-    SELECT ed.Id, ed.OpisDogadjaja, ed.DatumVrijeme
-    FROM EvidencijaDogadaja AS ed
-    WHERE ed.SlucajID = slucajID
-    ORDER BY ed.DatumVrijeme;
+    SELECT ed.Id, ed.opis_dogadaja,ed.datum_vrijeme
+    FROM Evidencija_dogadaja	AS ed
+    WHERE ed.id_slucaj = id_slucaj
+    ORDER BY ed.Datum_Vrijeme;
 END //
 
 DELIMITER ;
-
+CALL Izlistaj_dogadjaje(10);
 # Napiši PROCEDURU KOJA ZA ARGUMENT PRIMA OZNAKU PSA, A VRAĆA ID, IME i PREZIME VLASNIKA i BROJ SLUČAJEVA U KOJIMA JE PAS SUDJELOVAO
 DELIMITER //
-CREATE PROCEDURE Info_pas(IN OznakaPsa VARCHAR(255))
+CREATE PROCEDURE Info_pas(IN Oznaka VARCHAR(255))
 BEGIN
     SELECT
         O.Id AS Vlasnik_id,
-        O.Ime_Prezime AS Vlasnik,
+        O.Ime_Prezime AS Trener,
         COUNT(S.Id) AS BrojSlucajeva
     FROM
         Pas AS P
-    INNER JOIN Slucaj AS S ON P.Id = S.Pas_id
+    INNER JOIN Slucaj AS S ON P.Id = S.id_pas
     INNER JOIN Osoba AS O ON P.Id_trener = O.Id
     WHERE
-        P.Oznaka = OznakaPsa
+        P.Oznaka = Oznaka
     GROUP BY
         P.Id;
 END
 //
 DELIMITER ;
-
 # FUNKCIJE
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
@@ -844,13 +845,13 @@ BEGIN
     DECLARE predvidena_kazna INT;
     DECLARE broj_pojavljivanja INT;
     
-    SELECT Predviđena_kazna INTO predvidena_kazna
-    FROM KaznjivaDjela
+    SELECT predvidena_kazna INTO predvidena_kazna
+    FROM Kaznjiva_djela
     WHERE Naziv = naziv_kaznenog_djela;
 
     SELECT COUNT(*) INTO broj_pojavljivanja
-    FROM KaznjivaDjela_u_Slucaju
-    WHERE KaznjivoDjeloID = (SELECT ID FROM KaznjivaDjela WHERE Naziv = naziv_kaznenog_djela);
+    FROM Kaznjiva_Djela_u_Slucaju
+    WHERE id_kaznjivo_djelo= (SELECT ID FROM Kaznjiva_djela	WHERE Naziv = naziv_kaznenog_djela);
 
     RETURN CONCAT('Kazneno djelo: ', naziv_kaznenog_djela, '\nPredviđena kazna: ', predvidena_kazna, '\nBroj pojavljivanja: ', broj_pojavljivanja);
 END;
@@ -866,7 +867,7 @@ DETERMINISTIC
 BEGIN
     DECLARE osoba_info TEXT;
 
-    SELECT CONCAT('Ime i prezime: ', Ime_Prezime, '\nDatum rođenja: ', Datum_rodjenja, '\nAdresa: ', Adresa, '\nEmail: ', Email)
+    SELECT CONCAT('Ime i prezime: ', Ime_Prezime, '\nDatum rođenja: ', Datum_rodenja, '\nAdresa: ', Adresa, '\nEmail: ', Email)
     INTO osoba_info
     FROM Osoba
     WHERE Telefon = broj_telefona;
@@ -880,77 +881,42 @@ END;
 //
 DELIMITER ;
 
-# Napravi funkciju koja će za argument uzimati naziv grada i onda će izbrojati sve slučajeve u tom gradu. Također će izbrojiti sve slučajeve generalno i sve gradove generalno. Zatim će izračunati prosječan broj slučajeva po gradu. Na samom kraju će usporediti broj slučajeva u gradu koji smo uzeli za argument s prosječnim brojem slučajeva i vratit će "Ispodprosječna stopa" ako je manji od prosjeka; "U skladu s prosjekom" ako je isti kao prosjek ili "Iznadprosječna stopa" ako je veći od prosjeka. Prosjek računamo tako da podijelimo ukupan broj slučajeva s ukupnim brojem gradova
- 
-DELIMITER //
-CREATE FUNCTION StopaKriminaliteta(grad VARCHAR(255))
-RETURNS VARCHAR(50)
-DETERMINISTIC
-BEGIN
-    DECLARE broj_slucajeva_u_gradu INT;
-    DECLARE ukupan_broj_slucajeva INT;
-    DECLARE ukupan_broj_gradova INT;
-    DECLARE prosjecna_stopa_kriminaliteta DECIMAL(10, 2);
-
-    SELECT COUNT(*) INTO broj_slucajeva_u_gradu
-    FROM Slucaj
-    WHERE MjestoId = (SELECT Id FROM Mjesto WHERE Naziv = grad);
-
-    SELECT COUNT(*) INTO ukupan_broj_slucajeva
-    FROM Slucaj;
-
-    SELECT COUNT(DISTINCT MjestoId) INTO ukupan_broj_gradova
-    FROM Slucaj;
-
-    IF ukupan_broj_gradova > 0 THEN
-        SET prosjecna_stopa_kriminaliteta = ukupan_broj_slucajeva / ukupan_broj_gradova;
-    ELSE
-        SET prosjecna_stopa_kriminaliteta = 0;
-    END IF;
-
-    IF broj_slucajeva_u_gradu < prosjecna_stopa_kriminaliteta THEN
-        RETURN 'Ispodprosječna stopa';
-    ELSEIF broj_slucajeva_u_gradu = prosjecna_stopa_kriminaliteta THEN
-        RETURN 'U skladu s prosjekom';
-    ELSE
-        RETURN 'Iznadprosječna stopa';
-    END IF;
-END;
-//
-DELIMITER ;
-
 # NAPIŠI SQL FUNKCIJU KOJA ĆE SLUŽITI ZA UNAPRIJEĐENJE POLICIJSKIH SLUŽBENIKA. Za argument će primati id osobe koju unaprijeđujemo i id novog radnog mjesta na koje je unaprijeđujemo. Taj će novi radno_mjesto_id zamjeniti stari. Također će provjeravati je li slučajno novi radno_mjesto_id jednak radno_mjesto_id-ju osobe koja je nadređena osobi koju unaprijeđujemo. Ako jest, postavit ćemo nadređeni_id na NULL zato što nam ne može biti nadređena osoba ista po činu
+SET SQL_safe_updates = 0;
+SELECT UnaprijediPolicijskogSluzbenika(4, 6);
 DELIMITER //
-CREATE FUNCTION UnaprijediPolicijskogSluzbenika(osoba_id INT, novo_radno_mjesto_id INT)
+CREATE FUNCTION UnaprijediPolicijskogSluzbenika(id_osoba	INT, novo_radno_mjesto_id INT)
 RETURNS VARCHAR(255)
 DETERMINISTIC
 BEGIN
     DECLARE stari_radno_mjesto_id INT;
     DECLARE stari_nadredeni_id INT;
 
-    SELECT Radno_mjesto_id, Nadređeni_id INTO stari_radno_mjesto_id, stari_nadredeni_id
+    SELECT id_radno_mjesto, id_nadređeni	INTO stari_radno_mjesto_id, stari_nadredeni_id
     FROM Zaposlenik
-    WHERE Osoba_id = osoba_id;
-
+    WHERE 
+    id_osoba = id_osoba;
     IF novo_radno_mjesto_id = stari_radno_mjesto_id THEN
         UPDATE Zaposlenik
-        SET Nadređeni_id = NULL
-        WHERE Osoba_id = osoba_id;
+        SET id_nadređeni
+        = NULL
+        WHERE id_osoba = id_osoba;
         RETURN 'Unaprijeđeni službenik nema istog nadređenog.';
     ELSE
         UPDATE Zaposlenik
-        SET Radno_mjesto_id = novo_radno_mjesto_id
-        WHERE Osoba_id = osoba_id;
+        SET id_radno_mjesto
+        = novo_radno_mjesto_id
+        WHERE id_osoba = id_osoba;
         RETURN 'Službenik uspješno unaprijeđen.';
     END IF;
 END;
 //
 DELIMITER ;
-
+DROP FUNCTION UnaprijediPolicijskogSluzbenika;
 # Napiši funkciju koja će za određeni predmet vratiti slučaj u kojem je taj predmet dokaz i osobu koja je u tom slučaju osumnjičena
 DELIMITER //
 
-CREATE FUNCTION DohvatiSlucajIOsobu(predmet_id INT)
+CREATE FUNCTION DohvatiSlucajIOsobu(id_predmet	INT)
 RETURNS VARCHAR(512)
 DETERMINISTIC
 BEGIN
@@ -961,13 +927,14 @@ BEGIN
     
     SELECT Slucaj.Naziv INTO slucaj_naziv
     FROM Slucaj
-    WHERE Slucaj.DokazID = predmet_id;
+    WHERE Slucaj.id_dokaz= predmet_id;
     
     
     SELECT Osoba.Ime_Prezime INTO osoba_ime_prezime
     FROM Osoba
-    INNER JOIN Slucaj ON Osoba.Id = Slucaj.PociniteljID
-    WHERE Slucaj.DokazID = predmet_id;
+    INNER JOIN Slucaj ON Osoba.Id = Slucaj.id_pocinitelj
+    WHERE Slucaj.id_dokaz
+    = predmet_id;
     
     
     SET rezultat = CONCAT('Odabrani je predmet dokaz u slučaju: ', slucaj_naziv, ', gdje je osumnjičena osoba: ', osoba_ime_prezime);
@@ -1020,7 +987,9 @@ BEGIN
     SELECT COUNT(*)
     INTO count
     FROM Slucaj
-    WHERE PociniteljID IN (SELECT Vlasnik_id FROM Vozilo WHERE Registracija = Registracija);
+    WHERE id_pocinitelj
+    IN (SELECT id_vlasnik
+    FROM Vozilo WHERE Registracija = Registracija);
 
     IF count > 0 THEN
         SET result = CONCAT('Vozilo se pojavljivalo u slučajevima (', count, ' puta)');
@@ -1038,6 +1007,6 @@ DELIMITER ;
     9 triggers
     13 queries
     13 views
-    7 functions
+    6 functions
     8 procedures
 */

@@ -92,8 +92,8 @@ CREATE TABLE KaznjivaDjela (
 CREATE TABLE Pas (
     Id INTEGER AUTO_INCREMENT PRIMARY KEY,
     Id_trener INTEGER, # to je osoba zadužena za rad s psom
-    Oznaka VARCHAR(255),
-    Dob INTEGER,
+    Oznaka VARCHAR(255) UNIQUE, # pretpostavljan da je ovo unikatno za svakega psa; ima mi logike 
+    Dob INTEGER NOT NULL,
     Status VARCHAR(255),
     Id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.
     FOREIGN KEY (Id_trener) REFERENCES Osoba(Id),
@@ -333,6 +333,23 @@ END //
 
 DELIMITER ;
 
+# Napravi triger koji će onemogućiti da maloljetnik bude vlasnik vozila
+DELIMITER //
+CREATE TRIGGER Provjeri_Punoljetnost_Vlasnika
+BEFORE INSERT ON Vozilo FOR EACH ROW
+BEGIN
+    DECLARE vlasnik_godine INT;
+    SELECT TIMESTAMPDIFF(YEAR, (SELECT Datum_rodjenja FROM Osoba WHERE Id = NEW.Vlasnik_id), CURDATE()) INTO vlasnik_godine;
+
+    IF vlasnik_godine < 18 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Vlasnik vozila je maloljetan i ne može posjedovati vozilo!';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
 
 
 
@@ -437,6 +454,16 @@ HAVING COUNT(s.Id) = (
         GROUP BY VoditeljID
     ) AS Max_voditelj
 );
+
+# Ispiši sva mjesta gdje nema evidentiranih kaznjivih djela u slučajevima(ili uopće nema slučajeva)
+SELECT M.Id, M.Naziv
+FROM Mjesto M
+LEFT JOIN EvidencijaDogadaja ED ON M.Id = ED.MjestoId
+LEFT JOIN Slucaj S ON ED.SlucajID = S.Id
+LEFT JOIN KaznjivaDjela_u_Slucaju KDS ON S.Id = KDS.SlucajID
+WHERE KDS.SlucajID IS NULL OR KDS.KaznjivoDjeloID IS NULL
+GROUP BY M.Id, M.Naziv;
+
 
 # POGLEDI
 # Pronađi sve policajce koji su vlasnici vozila koja su starija od 10 godina
@@ -578,6 +605,37 @@ SELECT
     END AS Umirovljen
 FROM Osoba o
 INNER JOIN Zaposlenik z ON o.Id = z.Osoba_id;
+
+# Napravi pogled koji će izlistati sve pse i broj slučajeva na kojima je svaki od njih radio. U poseban stupac dodaj broj riješenih slučajeva od onih na kojima su radili. Zatim izračunaj postotak rješenosti slučajeva za svakog psa i to dodaj u novi stupac
+CREATE VIEW Pregled_Pasa AS
+SELECT
+    P.Id AS PasID,
+    P.Oznaka AS OznakaPsa,
+    O.Ime_Prezime AS Vlasnik,
+    COUNT(S.Id) AS BrojSlucajeva,
+    SUM(CASE WHEN S.Status = 'Završeno' THEN 1 ELSE 0 END) AS BrojRijesenih,
+    (SUM(CASE WHEN S.Status = 'Završeno' THEN 1 ELSE 0 END) / COUNT(S.Id) * 100) AS PostotakRjesenosti
+FROM
+    Pas AS P
+LEFT JOIN Slucaj AS S ON P.Id = S.Pas_id
+LEFT JOIN Osoba AS O ON P.Id_trener = O.Id
+GROUP BY
+    P.Id;
+
+# Nadogradi prethodni view tako da pronalazi najefikasnijeg psa, s najvećim postotkom rješenosti
+CREATE VIEW NajefikasnijiPas AS
+SELECT
+    PasID,
+    OznakaPsa,
+    Vlasnik,
+    BrojSlucajeva,
+    BrojRijesenih,
+    PostotakRjesenosti
+FROM
+    Pregled_Pasa
+WHERE
+    PostotakRjesenosti = (SELECT MAX(PostotakRjesenosti) FROM Pregled_Pasa);
+
 
 # Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
 DELIMITER //
@@ -757,6 +815,26 @@ END //
 
 DELIMITER ;
 
+# Napiši PROCEDURU KOJA ZA ARGUMENT PRIMA OZNAKU PSA, A VRAĆA ID, IME i PREZIME VLASNIKA i BROJ SLUČAJEVA U KOJIMA JE PAS SUDJELOVAO
+DELIMITER //
+CREATE PROCEDURE Info_pas(IN OznakaPsa VARCHAR(255))
+BEGIN
+    SELECT
+        O.Id AS Vlasnik_id,
+        O.Ime_Prezime AS Vlasnik,
+        COUNT(S.Id) AS BrojSlucajeva
+    FROM
+        Pas AS P
+    INNER JOIN Slucaj AS S ON P.Id = S.Pas_id
+    INNER JOIN Osoba AS O ON P.Id_trener = O.Id
+    WHERE
+        P.Oznaka = OznakaPsa
+    GROUP BY
+        P.Id;
+END
+//
+DELIMITER ;
+
 # FUNKCIJE
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
@@ -931,12 +1009,35 @@ END //
 
 DELIMITER ;
 
+# Napiši funkciju koja će za argument primati registarske tablice vozila, a vraćat će informaciju je li se to vozilo pojavilo u nekom od slučajeva, tako što će provjeriti je li se id_osoba koji referencira vlasnika pojavio u nekom slučaju kao pocinitelj_id. Ako se pojavilo, vraćat će "Vozilo se pojavljivalo u slučajevima", a ako se nije pojavilo, vraćat će "Vozilo se nije pojavljivalo u slučajevima". Također, vratit će i broj koliko se puta vozilo pojavilo
+DELIMITER //
+CREATE FUNCTION Provjera_vozila(Registracija VARCHAR(20)) RETURNS VARCHAR(100)
+DETERMINISTIC
+BEGIN
+    DECLARE result VARCHAR(100);
+    DECLARE count INT;
+
+    SELECT COUNT(*)
+    INTO count
+    FROM Slucaj
+    WHERE PociniteljID IN (SELECT Vlasnik_id FROM Vozilo WHERE Registracija = Registracija);
+
+    IF count > 0 THEN
+        SET result = CONCAT('Vozilo se pojavljivalo u slučajevima (', count, ' puta)');
+    ELSE
+        SET result = 'Vozilo se nije pojavljivalo u slučajevima';
+    END IF;
+
+    RETURN result;
+END //
+DELIMITER ;
+
 
 /* KILLCOUNT:
     18 tables
-    8 triggers
-    12 queries
-    11 views
-    6 functions
-    7 procedures
+    9 triggers
+    13 queries
+    13 views
+    7 functions
+    8 procedures
 */

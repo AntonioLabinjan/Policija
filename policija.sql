@@ -176,7 +176,7 @@ CREATE TABLE Sui_slucaj (
     id_slucaj INT,
     FOREIGN KEY (id_sui) REFERENCES Sredstvo_utvrdivanja_istine(id),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
-)
+);
 
 
 # TRIGERI
@@ -310,23 +310,17 @@ BEGIN
     DECLARE godina_danas INT;
     DECLARE godina_rodjenja INT;
     
-    -- Dohvati datum rođenja osobe povezane s slučajem
     SELECT Osoba.Datum_rodjenja INTO datum_rodjenja
     FROM Osoba
     WHERE Osoba.Id = NEW.id_pocinitelj;
     
-    -- Izračunaj trenutnu godinu
     SET godina_danas = YEAR(NOW());
     
-    -- Izračunaj godinu rođenja osobe
     SET godina_rodjenja = YEAR(datum_rodjenja);
     
-    -- Provjeri je li osoba mlađa od 18 godina
     IF (godina_danas - godina_rodjenja) < 18 THEN
-        -- Postavi napomenu za maloljetnog počinitelja
         SET NEW.Napomena = 'Počinitelj je maloljetan - slučaj nije otvoren za javnost';
     ELSE
-        -- Postavi napomenu za punoljetnog počinitelja
         SET NEW.Napomena = 'Počinitelj je punoljetan - javnost smije prisustvovati slučaju';
     END IF;
 END //
@@ -787,7 +781,6 @@ CREATE PROCEDURE IzmjeniKontaktInformacije(
     IN novi_telefon VARCHAR(20)
 )
 BEGIN
-    -- Provjeri postoji li osoba s navedenim ID-jem
     DECLARE br_osoba INT;
     SELECT COUNT(*) INTO br_osoba FROM Osoba WHERE Id = id_osoba;
     
@@ -836,6 +829,31 @@ BEGIN
 END
 //
 DELIMITER ;
+
+# Napiši proceduru koja će za određeno KD moći smanjiti ili povećati predviđenu kaznu tako što će za argument primiti naziv KD i broj godina za koji želimo izmjeniti kaznu
+# Ako želimo smanjiti kaznu, za argument ćemo prosljediti negativan broj
+DELIMITER //
+CREATE PROCEDURE izmjeni_kaznu(IN naziv_djela VARCHAR(255), IN iznos INT)
+BEGIN
+    DECLARE kazna INT;
+    
+    SELECT predvidena_kazna INTO kazna
+    FROM Kaznjiva_djela
+    WHERE naziv = naziv_djela;
+    
+    IF kazna IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Traženo KD ne postoji u bazi';
+    END IF;
+    
+    SET kazna = kazna + iznos;
+    
+    UPDATE Kaznjiva_djela
+    SET predvidena_kazna = kazna
+    WHERE naziv = naziv_djela;
+END //
+DELIMITER ;
+
+CALL izmjeni_kaznu('Ubojstvo', -10);
 # FUNKCIJE
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
@@ -1001,12 +1019,32 @@ BEGIN
 END //
 DELIMITER ;
 
+# Funkcija koja za argument prima id podrucja uprave i vraća broj mjesta u tom području te naziv svih mjesta u 1 stringu
+DELIMITER //
+CREATE FUNCTION PodaciOPodrucju(id_podrucje INT) RETURNS TEXT
+DETERMINISTIC
+BEGIN
+    DECLARE broj_mjesta INT;
+    DECLARE mjesta TEXT;
+    
+    SELECT COUNT(*) INTO broj_mjesta
+    FROM Mjesto
+    WHERE id_podrucje_uprave = id_podrucje;
+    
+    SELECT GROUP_CONCAT(naziv SEPARATOR ';') INTO mjesta
+    FROM Mjesto
+    WHERE id_podrucje_uprave = id_podrucje;
+    
+    RETURN CONCAT('Područje: ', (SELECT naziv FROM Podrucje_uprave WHERE id = id_podrucje), 
+                  ', Broj mjesta: ', broj_mjesta, ', Mjesta: ', mjesta);
+END //
+DELIMITER ;
 
 /* KILLCOUNT:
     18 tables
     9 triggers
     13 queries
     13 views
-    6 functions
-    8 procedures
+    7 functions
+    9 procedures
 */

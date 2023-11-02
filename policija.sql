@@ -38,6 +38,7 @@ CREATE TABLE Osoba (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ime_prezime VARCHAR(255) NOT NULL,
     datum_rodenja DATE NOT NULL,
+    oib CHAR(11) NOT NULL UNIQUE,
     spol VARCHAR(10) NOT NULL,
     adresa VARCHAR(255) NOT NULL,
     fotografija BLOB,
@@ -114,7 +115,7 @@ CREATE TABLE Slucaj (
     ukupna_vrijednost_zapljena INT,
     id_pas INT,
     id_svjedok INT,
-	FOREIGN KEY (id_pocinitelj) REFERENCES Osoba(id),
+    FOREIGN KEY (id_pocinitelj) REFERENCES Osoba(id),
     FOREIGN KEY (id_izvjestitelj) REFERENCES Osoba(id),
     FOREIGN KEY (id_voditelj) REFERENCES Zaposlenik(id),
     FOREIGN KEY (id_dokaz) REFERENCES Predmet(id),
@@ -439,7 +440,7 @@ SELECT
     COUNT(s.Id) AS Broj_Slucajeva
 FROM Zaposlenik z
 JOIN Osoba o ON z.id_osoba= o.Id
-LEFT JOIN Slucaj s ON s.id_voditelj	 = z.Id
+LEFT JOIN Slucaj s ON s.id_voditelj = z.Id
 GROUP BY z.Id, o.Ime_Prezime
 HAVING COUNT(s.Id) = (
     SELECT MAX(Broj_Slucajeva)
@@ -456,7 +457,7 @@ FROM Mjesto M
 LEFT JOIN Evidencija_dogadaja ED ON M.Id = ED.id_mjesto
 LEFT JOIN Slucaj S ON ED.id_slucaj= S.Id
 LEFT JOIN Kaznjiva_Djela_u_Slucaju KDS ON S.Id = KDS.id_slucaj
-WHERE KDS.id_slucaj IS NULL OR KDS.id_kaznjivo_djelo		 IS NULL
+WHERE KDS.id_slucaj IS NULL OR KDS.id_kaznjivo_djelo IS NULL
 GROUP BY M.Id, M.Naziv;
 
 
@@ -476,7 +477,7 @@ SELECT O.Ime_Prezime AS Počinitelj, K.Naziv AS KaznenoDjelo
 FROM Osoba O
 JOIN Slucaj S ON O.Id = S.id_pocinitelj
 JOIN Kaznjiva_Djela_u_Slucaju KD ON S.Id = KD.id_slucaj
-JOIN Kaznjiva_Djela K ON KD.id_kaznjivo_djelo			= K.ID
+JOIN Kaznjiva_Djela K ON KD.id_kaznjivo_djelo	= K.ID
 JOIN Predmet P ON S.id_dokaz= P.Id
 WHERE K.Naziv = 'Pljačka' AND P.Naziv LIKE '%pištolj%';
 

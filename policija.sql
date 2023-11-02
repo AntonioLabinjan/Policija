@@ -1343,3 +1343,12 @@ DELIMITER ;
     7 functions
     27 procedures
 */
+
+CALL Dodaj_Novo_Kaznjivo_Djelo('Kaznivo Djelo 1', 'Opis prvog kaznenog djela', 1000);
+CALL Dodaj_Novo_Kaznjivo_Djelo('Kaznivo Djelo 2', 'Opis drugog kaznenog djela', 1500);
+CALL Dodaj_Novo_Kaznjivo_Djelo('Kaznivo Djelo 3', 'Opis trećeg kaznenog djela', 800);
+
+SELECT * FROM kaznjiva_djela;
+SET SQL_SAFE_UPDATES = 0;
+
+DELETE FROM kaznjiva_djela;

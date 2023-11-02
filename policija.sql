@@ -183,7 +183,7 @@ CREATE TABLE Sui_slucaj (
 # TRIGERI
 # Triger koji osigurava da pri unosu spola osobe možemo staviti samo muški ili ženski spol
 DELIMITER //
-CREATE TRIGGER ProvjeriIspravnostSpola
+CREATE TRIGGER Provjeri_Ispravnost_Spola
 BEFORE INSERT ON Osoba
 FOR EACH ROW
 BEGIN
@@ -207,7 +207,7 @@ DELIMITER ;
 
 # Triger koji kreira stupac UkupnaVrijednostZapljena u tablici slučaj i ažurira ga nakon svake nove unesene zapljene u tom slučaju
 DELIMITER //
-CREATE TRIGGER AzurirajVrijednostZapljena
+CREATE TRIGGER Azuriraj_Vrijednost_Zapljena
 AFTER INSERT ON Zapljene
 FOR EACH ROW
 BEGIN
@@ -226,7 +226,7 @@ DELIMITER ;
 
 # Triger koji premješta završene slučajeve iz tablice slučaj u tablicu arhiva
 DELIMITER //
-CREATE TRIGGER PremjestiZavrseneSlucajeve
+CREATE TRIGGER Premjesti_Zavrsene_Slucajeve
 AFTER UPDATE ON Slucaj
 FOR EACH ROW
 BEGIN
@@ -240,7 +240,7 @@ DELIMITER ;
 
 # Provjera da osoba nije nadređena sama sebi
 DELIMITER //
-CREATE TRIGGER ProvjeraHijerarhije
+CREATE TRIGGER Provjera_Hijerarhije
 BEFORE INSERT ON Zaposlenik
 FOR EACH ROW
 BEGIN
@@ -255,7 +255,7 @@ DELIMITER ;
 # Provjera da su datum početka i završetka slučaja različiti i da je datum završetka "veći" od datuma početka
 DELIMITER //
 
-CREATE TRIGGER ProvjeraDatumZavrsetka
+CREATE TRIGGER Provjera_Datum_Zavrsetka
 BEFORE INSERT ON Slucaj
 FOR EACH ROW
 BEGIN

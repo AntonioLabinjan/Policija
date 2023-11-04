@@ -1149,7 +1149,7 @@ END //
 DELIMITER ;
 
 CALL izmjeni_kaznu('Ubojstvo', -10);
-# FUNKCIJE
+# FUNKCIJE + upiti za funkcije
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
 CREATE FUNCTION KDInfo(naziv_kaznenog_djela VARCHAR(255)) RETURNS TEXT
@@ -1173,6 +1173,17 @@ DELIMITER ;
 
 SELECT KDInfo('NazivKaznenogDjela');
 
+# Napiši upit koji će koristeći ovu funkciju izlistati sva kaznena djela koja su se dogodila u 2023. godini (ili nekoj drugoj) i njihov broj pojavljivanja
+SELECT
+    KDInfo(KD.Naziv) AS KaznenoDjeloInfo,
+    COUNT(KS.id_kaznjivo_djelo) AS BrojPojavljivanja
+FROM Kaznjiva_Djela_u_Slucaju KS
+INNER JOIN Kaznjiva_djela KD ON KS.id_kaznjivo_djelo = KD.ID
+INNER JOIN Slucaj S ON KS.id_slucaj = S.ID
+WHERE YEAR(S.Pocetak) = 2023
+GROUP BY KD.Naziv;
+
+
 # Napiši funkciju koja će vratiti informacije o osobi prema broju telefona
 DELIMITER //
 CREATE FUNCTION InformacijeOOsobiPoTelefonu(broj_telefona VARCHAR(20)) RETURNS TEXT
@@ -1193,6 +1204,14 @@ BEGIN
 END;
 //
 DELIMITER ;
+
+# Napiši upit koji će izlistati sve brojeve telefona i informacije o tim osobama, ali samo ako te osobe nisu policijski službenici
+SELECT
+    Telefon,
+    InformacijeOOsobiPoTelefonu(Telefon) AS OsobaInfo
+FROM Osoba
+WHERE Osoba.id NOT IN(SELECT id_osoba FROM Zaposlenik);
+
 
 # NAPIŠI SQL FUNKCIJU KOJA ĆE SLUŽITI ZA UNAPRIJEĐENJE POLICIJSKIH SLUŽBENIKA. Za argument će primati id osobe koju unaprijeđujemo i id novog radnog mjesta na koje je unaprijeđujemo. Taj će novi radno_mjesto_id zamjeniti stari. Također će provjeravati je li slučajno novi radno_mjesto_id jednak radno_mjesto_id-ju osobe koja je nadređena osobi koju unaprijeđujemo. Ako jest, postavit ćemo nadređeni_id na NULL zato što nam ne može biti nadređena osoba ista po činu
 SET SQL_safe_updates = 0;
@@ -1256,6 +1275,18 @@ BEGIN
 END //
 
 DELIMITER ;
+# Napiši upit koji izdvaja informacije o određenom predmetu, uključujući naziv predmeta, naziv povezanog slučaja i ime i prezime osumnjičenika u tom slučaju, koristeći funkciju DohvatiSlucajIOsobu za dobijanje dodatnih detalja za taj predmet.
+SELECT
+    Predmet.ID AS PredmetID,
+    Predmet.Naziv AS NazivPredmeta,
+    Slucaj.Naziv AS NazivSlucaja,
+    Osoba.Ime_Prezime AS ImePrezimeOsumnjicenika,
+    DohvatiSlucajIOsobu(Predmet.ID) AS InformacijeOPredmetu
+FROM Predmet
+INNER JOIN Slucaj ON Predmet.ID = Slucaj.id_dokaz
+INNER JOIN Osoba ON Slucaj.id_pocinitelj = Osoba.ID
+WHERE Predmet.ID = 5;
+
 
 # Napravi funkciju koja će za argument primati sredstvo utvrđivanja istine, zatim će prebrojiti u koliko je slučajeva to sredstvo korišteno, prebrojit će koliko je slučajeva od tog broja riješeno, te će na temelju ta 2 podatka izračunati postotak rješenosti slučajeva gdje se odabrano sredstvo koristi
 DELIMITER //
@@ -1289,6 +1320,14 @@ END //
 
 DELIMITER ;
 
+# Koristeći gornju funkciju prikaži sredstva koja imaju rješenost veću od 50% (riješeno je više od 50% slučajeva koja koriste to sredstvo)
+SELECT
+    Sredstvo_utvrdivanja_istine.ID AS id_sredstvo,
+    Sredstvo_utvrdivanja_istine.Naziv AS Naziv_Sredstva,
+    IzracunajPostotakRjesenosti(Sredstvo_utvrdivanja_istine.ID) AS postotak
+FROM Sredstvo_utvrdivanja_istine
+WHERE IzracunajPostotakRjesenosti(Sredstvo_utvrdivanja_istine.ID) > 50.00;
+
 # Napiši funkciju koja će za argument primati registarske tablice vozila, a vraćat će informaciju je li se to vozilo pojavilo u nekom od slučajeva, tako što će provjeriti je li se id_osoba koji referencira vlasnika pojavio u nekom slučaju kao pocinitelj_id. Ako se pojavilo, vraćat će "Vozilo se pojavljivalo u slučajevima", a ako se nije pojavilo, vraćat će "Vozilo se nije pojavljivalo u slučajevima". Također, vratit će i broj koliko se puta vozilo pojavilo
 DELIMITER //
 CREATE FUNCTION Provjera_vozila(Registracija VARCHAR(20)) RETURNS VARCHAR(100)
@@ -1314,6 +1353,29 @@ BEGIN
 END //
 DELIMITER ;
 
+# Koristeći funkciju prikažite vozila koja se pojavljuju iznad prosjeka (u iznadprosječnom broju)
+CREATE TEMPORARY TABLE ProsjekPojavljivanja AS
+SELECT AVG(count) AS Prosjek
+FROM (
+    SELECT COUNT(*) AS count
+    FROM Slucaj
+    INNER JOIN Vozilo ON Slucaj.id_pocinitelj = Vozilo.id_vlasnik
+    GROUP BY Vozilo.Registracija
+) AS Podupit1;
+
+SELECT V.Registracija, Provjera_vozila(V.Registracija) AS StatusVozila
+FROM Vozilo V
+INNER JOIN (
+    SELECT Vozilo.Registracija, COUNT(*) AS count
+    FROM Slucaj
+    INNER JOIN Vozilo ON Slucaj.id_pocinitelj = Vozilo.id_vlasnik
+    GROUP BY Vozilo.Registracija
+) AS Podupit2 ON V.Registracija = Podupit2.Registracija
+WHERE Podupit2.count > (SELECT Prosjek FROM ProsjekPojavljivanja);
+
+
+
+
 # Funkcija koja za argument prima id podrucja uprave i vraća broj mjesta u tom području te naziv svih mjesta u 1 stringu
 DELIMITER //
 CREATE FUNCTION Podaci_O_Podrucju(id_podrucje INT) RETURNS TEXT
@@ -1338,7 +1400,7 @@ DELIMITER ;
 /* KILLCOUNT:
     18 tables
     9 triggers
-    13 queries
+    18 queries
     13 views
     7 functions
     27 procedures

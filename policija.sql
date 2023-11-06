@@ -220,13 +220,14 @@ BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Osoba koju pokušavate obrisati je zaposlenik, prvo ju obrišite iz tablice Zaposlenik.';
     ELSE
-        IF OLD.datum_izlaska_iz_sluzbe IS NOT NULL THEN
+        IF EXISTS (SELECT 1 FROM Zaposlenik WHERE id_osoba = OLD.id) THEN
             DELETE FROM Zaposlenik WHERE id_osoba = OLD.id;
         END IF;
     END IF;
 END;
 //
 DELIMITER ;
+
 
 # Napiši triger koji će, u slučaju da se kažnjivo djelo obriše iz baze, postaviti id_kaznjivo_djelo kod psa na NULL, ukoliko je on prije bio zadužen za upravo to KD koje smo obrisali
 DELIMITER //
@@ -1259,7 +1260,7 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL izmjeni_kaznu('Ubojstvo', -10);
+#CALL izmjeni_kaznu('Ubojstvo', -10);
 # FUNKCIJE + upiti za funkcije
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
@@ -1326,7 +1327,7 @@ WHERE Osoba.id NOT IN(SELECT id_osoba FROM Zaposlenik);
 
 # NAPIŠI SQL FUNKCIJU KOJA ĆE SLUŽITI ZA UNAPRIJEĐENJE POLICIJSKIH SLUŽBENIKA. Za argument će primati id osobe koju unaprijeđujemo i id novog radnog mjesta na koje je unaprijeđujemo. Taj će novi radno_mjesto_id zamjeniti stari. Također će provjeravati je li slučajno novi radno_mjesto_id jednak radno_mjesto_id-ju osobe koja je nadređena osobi koju unaprijeđujemo. Ako jest, postavit ćemo nadređeni_id na NULL zato što nam ne može biti nadređena osoba ista po činu
 SET SQL_safe_updates = 0;
-SELECT UnaprijediPolicijskogSluzbenika(4, 6);
+# SELECT UnaprijediPolicijskogSluzbenika(4, 6);
 DELIMITER //
 CREATE FUNCTION UnaprijediPolicijskogSluzbenika(id_osoba	INT, novo_radno_mjesto_id INT)
 RETURNS VARCHAR(255)

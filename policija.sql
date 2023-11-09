@@ -55,13 +55,11 @@ CREATE TABLE Zaposlenik (
   id_radno_mjesto INT,
   id_odjel INT,
   id_zgrada INT,
-  id_mjesto INT,
   id_osoba INT,
   FOREIGN KEY (id_nadređeni) REFERENCES Zaposlenik(id), 
   FOREIGN KEY (id_radno_mjesto) REFERENCES Radno_mjesto(id),
   FOREIGN KEY (id_odjel) REFERENCES Odjeli(id),
   FOREIGN KEY (id_zgrada) REFERENCES Zgrada(id), # ovo je tipa zatvor di se nalazi/postaja di dela itd.
-  FOREIGN KEY (id_mjesto) REFERENCES Mjesto(id),
   FOREIGN KEY (id_osoba) REFERENCES Osoba(id)
 );
 	

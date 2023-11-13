@@ -457,6 +457,19 @@ END;
 DELIMITER ;
 
 
+# Napravi triger koji će u slučaju da postavljamo status slučaja na završeno, postaviti datum završetka na današnji ako mi eksplicitno ne navedemo neki drugi datum, ali će dozvoliti da ga izmjenimo ako želimo
+DELIMITER //
+
+CREATE TRIGGER AžurirajDatumZavršetka
+BEFORE UPDATE ON Slucaj
+FOR EACH ROW
+BEGIN
+    IF NEW.Status = 'Riješen' AND OLD.Status != 'Riješen' AND NEW.Datum_zavrsetka IS NULL THEN
+        SET NEW.Datum_zavrsetka = CURRENT_DATE();
+    END IF;
+END;
+//
+DELIMITER ;
 
 
 
@@ -1294,7 +1307,7 @@ DELIMITER ;
 CALL Dohvati_Slucajeve_Po_Kaznenom_Djelu_Sortirano('Ubojstvo');
 
 # Napiši proceduru koja će ispisati sve zaposlenike, imena i prezimena, adrese i brojeve telefona u jednom redu za svakog zaposlenika
-DROP PROCEDURE IspisiInformacijeZaposlenika;
+DROP PROCEDURE IF EXISTS IspisiInformacijeZaposlenika;
 DELIMITER //
 
 CREATE PROCEDURE IspisiInformacijeZaposlenika()
@@ -1348,12 +1361,49 @@ DELIMITER ;
 
 
 
-
-
-
-
-
 CALL IspisiInformacijeZaposlenika;
+# Napiši proceduru koja će ispisati sve slučajeve i za svaki slučaj ispisati voditelja i ukupan iznos zapljena. Ako nema pronađenih slučajeva, neka nas obavijesti o tome
+DROP PROCEDURE IspisiPodatkeOSlucajevimaIZapljenama;
+DELIMITER //
+
+CREATE PROCEDURE IspisiPodatkeOSlucajevimaIZapljenama()
+BEGIN
+    -- Kreirajte tablicu za privremene rezultate
+    CREATE TEMPORARY TABLE IF NOT EXISTS TempRezultati (
+        id INT,
+        voditeljImePrezime VARCHAR(255),
+        ukupanIznosZapljena NUMERIC(10, 2)
+    );
+
+    -- Ubacite podatke o slučajevima, voditeljima i ukupnom iznosu zapljena u tablicu za privremene rezultate
+    INSERT INTO TempRezultati (id, voditeljImePrezime, ukupanIznosZapljena)
+    SELECT
+        Slucaj.id,
+        Osoba.ime_prezime AS voditeljImePrezime,
+        COALESCE(SUM(Zapljene.Vrijednost), 0) AS ukupanIznosZapljena # sumiraj sve zapljene koje nisu NULL (za to služi COALESCE)
+    FROM Slucaj
+    JOIN Zaposlenik ON Slucaj.id_voditelj = Zaposlenik.id
+    JOIN Osoba ON Zaposlenik.id_osoba = Osoba.id
+    LEFT JOIN Zapljene ON Slucaj.id = Zapljene.id_slucaj
+    GROUP BY Slucaj.id, Osoba.ime_prezime;
+
+    -- Ispisivanje informacija o slučaju
+    SELECT * FROM TempRezultati;
+
+    -- Ispis obavijesti ako nema pronađenih redaka
+    IF (SELECT COUNT(*) FROM TempRezultati) = 0 THEN
+        SELECT 'Nema podataka o slučajevima i zapljenama.' AS Napomena;
+    END IF;
+
+    -- Obrišite tablicu za privremene rezultate
+    DROP TEMPORARY TABLE IF EXISTS TempRezultati;
+
+END //
+
+DELIMITER ;
+
+
+CALL IspisiPodatkeOSlucajevimaIZapljenama;
 # FUNKCIJE + upiti za funkcije
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
@@ -1602,15 +1652,43 @@ BEGIN
 END //
 DELIMITER ;
 
+DELIMITER //
+
+CREATE FUNCTION Broj_Kaznjivih_Djela_U_Slucaju(id_slucaj INT) RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE broj_kaznjivih_djela INT;
+
+    SELECT COUNT(*) INTO broj_kaznjivih_djela
+    FROM Kaznjiva_djela_u_slucaju
+    WHERE id_slucaj = id_slucaj;
+
+    RETURN broj_kaznjivih_djela;
+END;
+
+//
+DELIMITER ;
+
+SELECT Broj_Kaznjivih_Djela_U_Slucaju(5);
+
+# Koristeći gornju funkciju napiši upit koji će naći slučaj s najviše kažnjivih djela
+SELECT
+    S.ID AS id_slucaj,
+    S.Naziv AS Naziv_Slucaja,
+    MAX(Broj_Kaznjivih_Djela_U_Slucaju(S.ID)) AS Broj_Kaznjivih_Djela
+FROM Slucaj S
+GROUP BY id_slucaj, Naziv_Slucaja;
+
+
 # IDEJA; ZA INSERTANJE KORISTIMO TRANSAKCIJE U KOJIMA POZIVAMO PROCEDURE ZA INSERT U POJEDINE TABLICE
 
 /* KILLCOUNT:
     18 tables
-    15 triggers
-    18 queries
+    16 triggers
+    19 queries
     13 views
-    7 functions
-    29 procedures
+    8 functions
+    30 procedures
 */
 
 # Ovo je samo neko testiranje, niš bitno

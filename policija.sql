@@ -179,6 +179,7 @@ CREATE TABLE Sui_slucaj (
 );
 
 
+
 # TRIGERI
 # Iako postoji opcija kaskadnog brisanja u SQL-u, ovdje ćemo u nekim slučajevima pomoću trigera htijeti zabraniti brisanje, pošto je važno da neki podaci ostanu zabilježeni. U iznimnim slučajevima možemo ostavljati obavijest da je neka vrijednost obrisana iz baze. Također, u većini slučajeva nam opcija kaskadnog brisanja nikako ne bi odgovarala, zato što je u radu policije važna kontinuirana evidencija
 # Napiši triger koji će a) ako u području uprave više od 5 mjesta, zabraniti brisanje uz obavijest: "Područje uprave s više od 5 mjesta ne smije biti obrisano" b) ako u području uprave ima manje od 5 mjesta, dopustiti da se područje uprave obriše, ali će se onda u mjestima koja referenciraju to područje uprave, pojaviti obavijest "Prvotno područje uprave je obrisano, povežite mjesto s novim područjem"
@@ -1259,7 +1260,100 @@ BEGIN
 END //
 DELIMITER ;
 
-#CALL izmjeni_kaznu('Ubojstvo', -10);
+#Napiši proceduru koja će dohvaćati slučajeve koji sadrže određeno kazneno djelo i sortirati ih po vrijednosti zapljene silazno
+DELIMITER //
+CREATE PROCEDURE Dohvati_Slucajeve_Po_Kaznenom_Djelu_Sortirano(kaznenoDjeloNaziv VARCHAR(255))
+BEGIN
+    DECLARE slucaj_id INT;
+    DECLARE slucaj_naziv VARCHAR(255);
+    DECLARE zapljena_vrijednost NUMERIC (5,2);
+
+    DECLARE slucajevi_Cursor CURSOR FOR
+        SELECT Slucaj.id, Slucaj.naziv, Zapljene.Vrijednost
+        FROM Slucaj
+        JOIN Kaznjiva_djela_u_slucaju ON Slucaj.id = Kaznjiva_djela_u_slucaju.id_slucaj
+        JOIN Kaznjiva_djela ON Kaznjiva_djela_u_slucaju.id_kaznjivo_djelo = Kaznjiva_djela.id
+        LEFT JOIN Zapljene ON Slucaj.id = Zapljene.id_slucaj
+        WHERE Kaznjiva_djela.naziv = kaznenoDjeloNaziv
+        ORDER BY Zapljene.Vrijednost DESC;
+
+    OPEN slucajevi_Cursor;
+
+    slucaj_loop: LOOP
+        FETCH slucajevi_Cursor INTO slucaj_id, slucaj_naziv, zapljena_vrijednost;
+        IF slucaj_id IS NULL THEN
+            LEAVE slucaj_loop;
+        END IF;
+        -- Ovdje možeš raditi s podacima
+        SELECT slucaj_naziv, zapljena_vrijednost;
+    END LOOP;
+
+    CLOSE slucajevi_Cursor;
+END //
+DELIMITER ;
+CALL Dohvati_Slucajeve_Po_Kaznenom_Djelu_Sortirano('Ubojstvo');
+
+# Napiši proceduru koja će ispisati sve zaposlenike, imena i prezimena, adrese i brojeve telefona u jednom redu za svakog zaposlenika
+DROP PROCEDURE IspisiInformacijeZaposlenika;
+DELIMITER //
+
+CREATE PROCEDURE IspisiInformacijeZaposlenika()
+BEGIN
+
+    DECLARE zaposlenik_id INT;
+    DECLARE zaposlenik_ime_prezime VARCHAR(255);
+    DECLARE zaposlenik_adresa VARCHAR(255);
+    DECLARE zaposlenik_telefon VARCHAR(20);
+
+
+    DECLARE zaposleniciCursor CURSOR FOR
+        SELECT Zaposlenik.id, Osoba.ime_prezime, Osoba.adresa, Osoba.telefon
+        FROM Zaposlenik
+        JOIN Osoba ON Zaposlenik.id_osoba = Osoba.id;
+
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+    BEGIN
+
+        SELECT 'Nema dostupnih informacija o zaposlenicima.' AS Info;
+    END;
+
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+
+        SELECT 'Došlo je do greške u izvršavanju SQL upita.' AS Info;
+    END;
+
+
+    OPEN zaposleniciCursor;
+
+    zaposlenik_loop: LOOP
+
+        FETCH zaposleniciCursor INTO zaposlenik_id, zaposlenik_ime_prezime, zaposlenik_adresa, zaposlenik_telefon;
+
+
+        IF zaposlenik_id IS NULL THEN
+            LEAVE zaposlenik_loop;
+        END IF;
+
+
+        SELECT CONCAT('Zaposlenik: ', zaposlenik_ime_prezime, ', Adresa: ', zaposlenik_adresa, ', Telefon: ', zaposlenik_telefon) AS Info;
+    END LOOP;
+
+
+    CLOSE zaposleniciCursor;
+END //
+
+DELIMITER ;
+
+
+
+
+
+
+
+
+CALL IspisiInformacijeZaposlenika;
 # FUNKCIJE + upiti za funkcije
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
@@ -1516,7 +1610,7 @@ DELIMITER ;
     18 queries
     13 views
     7 functions
-    27 procedures
+    29 procedures
 */
 
 # Ovo je samo neko testiranje, niš bitno

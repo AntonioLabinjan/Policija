@@ -1701,3 +1701,5 @@ SET SQL_SAFE_UPDATES = 0;
 
 DELETE FROM kaznjiva_djela;
 */
+
+# Autentifikacija i autorizacija; nekako dodat neke osnove

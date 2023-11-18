@@ -299,17 +299,17 @@ CREATE TRIGGER bi_osoba
 BEFORE INSERT ON Osoba
 FOR EACH ROW
 BEGIN
-    DECLARE validanSpol BOOLEAN;
+    DECLARE validan_spol BOOLEAN;
 
     SET NEW.Spol = LOWER(NEW.Spol);
 
     IF NEW.Spol IN ('muski', 'zenski', 'muški', 'ženski', 'm', 'ž', 'muški', 'ženski', 'muski', 'zenski') THEN
-        SET validanSpol = TRUE;
+        SET validan_spol = TRUE;
     ELSE
-        SET validanSpol = FALSE;
+        SET validan_spol = FALSE;
     END IF;
 
-    IF NOT validanSpol THEN
+    IF NOT validan_spol THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Spol nije valjan. Ispravni formati su: muski, zenski, m, ž, muški, ženski.';
     END IF;
@@ -317,7 +317,7 @@ END;
 //
 DELIMITER ;
 
-# Triger koji kreira stupac UkupnaVrijednostZapljena u tablici slučaj i ažurira ga nakon svake nove unesene zapljene u tom slučaju
+# Triger koji kreira stupac Ukupna_vrijednost_zapljena u tablici slučaj i ažurira ga nakon svake nove unesene zapljene u tom slučaju
 DELIMITER //
 CREATE TRIGGER ai_zapljena
 AFTER INSERT ON Zapljene
@@ -330,7 +330,7 @@ BEGIN
     WHERE P.ID = NEW.id_predmet;
 
     UPDATE Slucaj
-    SET UkupnaVrijednostZapljena = ukupno
+    SET Ukupna_vrijednost_zapljena = ukupno
     WHERE ID = NEW.id_slucaj;
 END;
 //
@@ -383,10 +383,10 @@ DELIMITER ;
 DELIMITER //
 
 CREATE TRIGGER au_pas
-BEFORE INSERT ON Pas
+AFTER UPDATE ON Pas
 FOR EACH ROW
 BEGIN
-    IF NEW.dob >= 10 THEN
+    IF NEW.dob >= 10 AND OLD.dob <> NEW.dob THEN
         SET NEW.status = 'Časno umirovljen';
     END IF;
 END;
@@ -399,10 +399,10 @@ CREATE TRIGGER bi_slucaj_pas
 BEFORE INSERT ON Slucaj
 FOR EACH ROW
 BEGIN
-    DECLARE PasStatus VARCHAR(255);
-    SELECT Status INTO PasStatus FROM Pas WHERE Id = NEW.id_pas;
+    DECLARE Pas_Status VARCHAR(255);
+    SELECT Status INTO Pas_Status FROM Pas WHERE Id = NEW.id_pas;
     
-    IF PasStatus = 'Časno umirovljen' THEN
+    IF Pas_Status = 'Časno umirovljen' THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Pas kojeg pokušavate koristiti na slučaju je umirovljen, odaberite drugog.';
     END IF;
@@ -748,7 +748,7 @@ GROUP BY
 # Nadogradi prethodni view tako da pronalazi najefikasnijeg psa, s najvećim postotkom rješenosti
 CREATE VIEW NajefikasnijiPas AS
 SELECT
-    PasId,
+    PasID,
     OznakaPsa,
     Vlasnik,
     BrojSlucajeva,
@@ -1610,7 +1610,7 @@ END //
 DELIMITER ;
 
 # Koristeći funkciju prikažite vozila koja se pojavljuju iznad prosjeka (u iznadprosječnom broju)
-CREATE TEMPORARY TABLE ProsjekPojavljivanja AS
+CREATE TEMPORARY TABLE Prosjek_Pojavljivanja AS
 SELECT AVG(count) AS Prosjek
 FROM (
     SELECT COUNT(*) AS count
@@ -1627,7 +1627,7 @@ INNER JOIN (
     INNER JOIN Vozilo ON Slucaj.id_pocinitelj = Vozilo.id_vlasnik
     GROUP BY Vozilo.Registracija
 ) AS Podupit2 ON V.Registracija = Podupit2.Registracija
-WHERE Podupit2.count > (SELECT Prosjek FROM ProsjekPojavljivanja);
+WHERE Podupit2.count > (SELECT Prosjek FROM Prosjek_Pojavljivanja);
 
 
 

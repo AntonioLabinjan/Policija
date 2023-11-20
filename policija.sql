@@ -382,8 +382,8 @@ DELIMITER ;
 # Napravi triger koji će, u slučaju da ažuriramo godine psa i one iznose 10 ili više, pas će biti automatski časno umirovljen
 DELIMITER //
 
-CREATE TRIGGER au_pas
-AFTER UPDATE ON Pas
+CREATE TRIGGER bu_pas
+BEFORE UPDATE ON Pas
 FOR EACH ROW
 BEGIN
     IF NEW.dob >= 10 AND OLD.dob <> NEW.dob THEN
@@ -465,8 +465,8 @@ CREATE TRIGGER bu_slucaj
 BEFORE UPDATE ON Slucaj
 FOR EACH ROW
 BEGIN
-    IF NEW.Status = 'Riješen' AND OLD.Status != 'Riješen' AND NEW.Datum_zavrsetka IS NULL THEN
-        SET NEW.Datum_zavrsetka = CURRENT_DATE();
+    IF NEW.Status = 'Riješen' AND OLD.Status != 'Riješen' AND NEW.Zavrsetak IS NULL THEN
+        SET NEW.Zavrsetak = CURRENT_DATE();
     END IF;
 END;
 //
@@ -1681,14 +1681,73 @@ FROM Slucaj S
 GROUP BY id_slucaj, Naziv_Slucaja;
 
 
+# Funkcija koje će za argument primati status slučajeva i vratiti će broj slučajeva sa tim statusom
+DELIMITER //
+CREATE FUNCTION broj_slucajeva_po_statusu(status VARCHAR(20)) RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE broj_slucajeva INT;
+
+    IF status IS NULL THEN
+        SET broj_slucajeva = 0;
+    ELSE
+        SELECT COUNT(*) INTO broj_slucajeva
+        FROM Slucaj
+        WHERE Status = status;
+    END IF;
+
+    RETURN broj_slucajeva;
+END;
+
+//
+DELIMITER ;
+
+# Koristeći gornju funkciju napravi upit koji će dohvatiti sve statuse koji vrijede za više od 5 slučajeva (ili neki drugi broj)
+SELECT 
+    Status,
+    COUNT(*) AS broj_slucajeva
+FROM
+    Slucaj
+GROUP BY
+    Status
+HAVING
+    broj_slucajeva_po_statusu(Status) > 5; -- Prilagodimo broj prema potrebi
+
+# Funkcija koja za argument prima id_slucaj i računa njegovo trajanje; ako je završen, onda trajanje od početka do završetka, a ako nije, onda trajanje od početka do poziva funkcije
+DELIMITER //
+CREATE FUNCTION Informacije_o_slucaju(id_slucaj INT) RETURNS TEXT
+DETERMINISTIC
+BEGIN
+    DECLARE status_slucaja VARCHAR(20);
+    DECLARE trajanje_slucaja INT;
+
+    SELECT 
+        Status,
+        CASE
+            WHEN Zavrsetak IS NULL THEN DATEDIFF(NOW(), Pocetak)
+            ELSE DATEDIFF(Zavrsetak, Pocetak)
+        END AS trajanje
+    INTO
+        status_slucaja, trajanje_slucaja
+    FROM 
+        Slucaj
+    WHERE 
+        id = id_slucaj;
+
+    RETURN CONCAT('Status slučaja: ', status_slucaja, '\nTrajanje slučaja: ', trajanje_slucaja, ' dana');
+END;
+//
+DELIMITER ;
+
+
 # IDEJA; ZA INSERTANJE KORISTIMO TRANSAKCIJE U KOJIMA POZIVAMO PROCEDURE ZA INSERT U POJEDINE TABLICE
 
 /* KILLCOUNT:
     18 tables
     16 triggers
-    19 queries
+    20 queries
     13 views
-    8 functions
+    10 functions
     30 procedures
 */
 

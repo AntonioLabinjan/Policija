@@ -114,12 +114,14 @@ CREATE TABLE Slucaj (
     ukupna_vrijednost_zapljena INT,
     id_pas INT,
     id_svjedok INT,
+id_ostecenik INT,
     FOREIGN KEY (id_pocinitelj) REFERENCES Osoba(id),
     FOREIGN KEY (id_izvjestitelj) REFERENCES Osoba(id),
     FOREIGN KEY (id_voditelj) REFERENCES Zaposlenik(id),
     FOREIGN KEY (id_dokaz) REFERENCES Predmet(id),
     FOREIGN KEY (id_pas) REFERENCES Pas(id),
-    FOREIGN KEY (id_svjedok) REFERENCES Osoba(id)
+    FOREIGN KEY (id_svjedok) REFERENCES Osoba(id),
+FOREIGN KEY (id_ostecenik) REFERENCES Osoba(id)
 );
 
 CREATE TABLE Evidencija_dogadaja (

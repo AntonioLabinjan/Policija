@@ -139,8 +139,10 @@ CREATE TABLE Evidencija_dogadaja (
 
 CREATE TABLE Kaznjiva_djela_u_slucaju (
 	id INT AUTO_INCREMENT PRIMARY KEY,
+	id_mjesto INT,
     id_slucaj INT,
     id_kaznjivo_djelo INT,
+	FOREIGN KEY (id_mjesto) REFERENCES Mjesto(id),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
     FOREIGN KEY (id_kaznjivo_djelo) REFERENCES Kaznjiva_djela(id)
 );

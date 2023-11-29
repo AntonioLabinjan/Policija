@@ -97,7 +97,7 @@ CREATE TABLE Pas (
     dob INTEGER NOT NULL,
     status VARCHAR(255),
     id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.
-    FOREIGN KEY (id_trener) REFERENCES Osoba(id),
+    FOREIGN KEY (id_trener) REFERENCES Zaposlenik(id),
     FOREIGN KEY (id_kaznjivo_djelo) REFERENCES Kaznjiva_djela(id)
     );
 

@@ -182,7 +182,7 @@ CREATE TABLE Sui_slucaj (
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
 );
 
-# KORISNICI (autentifikacija/autorizacija)
+/*# KORISNICI (autentifikacija/autorizacija)
 -- Kreiranje admin korisnika
 CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin_password';
 GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION;
@@ -236,7 +236,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON Policija.Sui TO 'detektiv'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE ON Policija.Sui_slucaj TO 'detektiv'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE ON Policija.Izvjestaji TO 'detektiv'@'localhost';
 FLUSH PRIVILEGES;
-
+*/
 # TRIGERI
 # Iako postoji opcija kaskadnog brisanja u SQL-u, ovdje ćemo u nekim slučajevima pomoću trigera htijeti zabraniti brisanje, pošto je važno da neki podaci ostanu zabilježeni. U iznimnim slučajevima možemo ostavljati obavijest da je neka vrijednost obrisana iz baze. Također, u većini slučajeva nam opcija kaskadnog brisanja nikako ne bi odgovarala, zato što je u radu policije važna kontinuirana evidencija
 # Napiši triger koji će a) ako u području uprave više od 5 mjesta, zabraniti brisanje uz obavijest: "Područje uprave s više od 5 mjesta ne smije biti obrisano" b) ako u području uprave ima manje od 5 mjesta, dopustiti da se područje uprave obriše, ali će se onda u mjestima koja referenciraju to područje uprave, pojaviti obavijest "Prvotno područje uprave je obrisano, povežite mjesto s novim područjem"
@@ -647,7 +647,7 @@ GROUP BY M.Id, M.Naziv;
 # POGLEDI
 # Materijalizirani pogled (privremena tablica)
 # Ako je uz osumnjičenika povezano vozilo, onda se stvara materijalizirani pogled koji prati sve osumnjičenike i njihova vozila
-CREATE VIEW osumnjicenici_vozila
+CREATE VIEW osumnjicenici_vozila AS
 SELECT
 	Osoba.id AS id_osobe,
 	Osoba.ime_prezime,
@@ -661,7 +661,7 @@ SELECT
 	Vozilo.marka,
 	Vozilo.model,
 	Vozilo.registracija,
-	Vozio.godina_proizvodnje,
+	Vozilo.godina_proizvodnje
 FROM Osoba
 LEFT JOIN Vozilo ON Osoba.id = Vozilo.id_vlasnik
 INNER JOIN Slucaj ON Osoba.id = Slucaj.id_pocinitelj;
@@ -1307,7 +1307,7 @@ BEGIN
 END //
 
 DELIMITER ;
-CALL Izlistaj_dogadjaje(10);
+#CALL Izlistaj_dogadjaje(10);
 # Napiši PROCEDURU KOJA ZA ARGUMENT PRIMA OZNAKU PSA, A VRAĆA ID, IME i PREZIME VLASNIKA i BROJ SLUČAJEVA U KOJIMA JE PAS SUDJELOVAO
 DELIMITER //
 CREATE PROCEDURE Info_pas(IN Oznaka VARCHAR(255))
@@ -1382,7 +1382,7 @@ BEGIN
     CLOSE slucajevi_Cursor;
 END //
 DELIMITER ;
-CALL Dohvati_Slucajeve_Po_Kaznenom_Djelu_Sortirano('Ubojstvo');
+#CALL Dohvati_Slucajeve_Po_Kaznenom_Djelu_Sortirano('Ubojstvo');
 
 # Napiši proceduru koja će ispisati sve zaposlenike, imena i prezimena, adrese i brojeve telefona u jednom redu za svakog zaposlenika
 DROP PROCEDURE IF EXISTS IspisiInformacijeZaposlenika;
@@ -1441,7 +1441,7 @@ DELIMITER ;
 
 CALL IspisiInformacijeZaposlenika;
 # Napiši proceduru koja će ispisati sve slučajeve i za svaki slučaj ispisati voditelja i ukupan iznos zapljena. Ako nema pronađenih slučajeva, neka nas obavijesti o tome
-DROP PROCEDURE IspisiPodatkeOSlucajevimaIZapljenama;
+#DROP PROCEDURE IspisiPodatkeOSlucajevimaIZapljenama;
 DELIMITER //
 
 CREATE PROCEDURE IspisiPodatkeOSlucajevimaIZapljenama()

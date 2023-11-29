@@ -645,6 +645,26 @@ GROUP BY M.Id, M.Naziv;
 
 
 # POGLEDI
+# Materijalizirani pogled (privremena tablica)
+# Ako je uz osumnjičenika povezano vozilo, onda se stvara materijalizirani pogled koji prati sve osumnjičenike i njihova vozila
+CREATE VIEW osumnjicenici_vozila
+SELECT
+	Osoba.id AS id_osobe,
+	Osoba.ime_prezime,
+	Osoba.datum_rodenja,
+	Osoba.oib,
+	Osoba.spol,
+	Osoba.adresa,
+	Osoba.telefon,
+	Osoba.email,
+	Vozilo.id AS id_vozila,
+	Vozilo.marka,
+	Vozilo.model,
+	Vozilo.registracija,
+	Vozio.godina_proizvodnje,
+FROM Osoba
+LEFT JOIN Vozilo ON Osoba.id = Vozilo.id_vlasnik
+INNER JOIN Slucaj ON Osoba.id = Slucaj.id_pocinitelj;
 # Pronađi sve policajce koji su vlasnici vozila koja su starija od 10 godina
 CREATE VIEW PolicajciSaStarimVozilima AS
 SELECT O.Ime_Prezime AS Policajac, V.Marka, V.Model, V.Godina_proizvodnje

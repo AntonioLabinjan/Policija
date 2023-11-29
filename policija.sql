@@ -174,8 +174,8 @@ CREATE TABLE Sredstvo_utvrdivanja_istine ( # ovo je tipa poligraf, alkotest i sl
 
 CREATE TABLE Sui_slucaj (
 	id INT AUTO_INCREMENT PRIMARY KEY,
-    id_sui INT,
-    id_slucaj INT,
+    id_sui INT NOT NULL,
+    id_slucaj INT NOT NULL,
     FOREIGN KEY (id_sui) REFERENCES Sredstvo_utvrdivanja_istine(id),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
 );

@@ -15,6 +15,8 @@ CREATE TABLE Mjesto (
     FOREIGN KEY (Id_Podrucje_Uprave) REFERENCES Podrucje_uprave(Id)
 );
 
+
+
 CREATE TABLE Zgrada (
     id INT AUTO_INCREMENT PRIMARY KEY,
     adresa VARCHAR(255) NOT NULL,
@@ -400,12 +402,16 @@ AFTER UPDATE ON Slucaj
 FOR EACH ROW
 BEGIN
     IF NEW.Status = 'Završeno' THEN
-        INSERT INTO Arhiva (SlucajID) VALUES (OLD.ID);
+        INSERT INTO Arhiva (id_slucaj) VALUES (OLD.ID);
         DELETE FROM Slucaj WHERE ID = OLD.ID;
     END IF;
 END;
 //
 DELIMITER ;
+
+CREATE TEMPORARY TABLE Arhiva(
+id_slucaj FOREIGN KEY REFERENCES slucaj(id)
+	):
 
 # Provjera da osoba nije nadređena sama sebi
 DELIMITER //

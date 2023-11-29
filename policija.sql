@@ -42,15 +42,14 @@ CREATE TABLE Osoba (
     oib CHAR(11) NOT NULL UNIQUE,
     spol VARCHAR(10) NOT NULL,
     adresa VARCHAR(255) NOT NULL,
-    fotografija BLOB,
     telefon VARCHAR(20) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE
     );
 
 CREATE TABLE Zaposlenik (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  datum_zaposlenja DATETIME NOT NULL,
-  datum_izlaska_iz_sluzbe DATETIME, # ovo može biti NULL ako nije izašao iz službe
+  datum_zaposlenja DATE NOT NULL,
+  datum_izlaska_iz_sluzbe DATE, # ovo može biti NULL ako nije izašao iz službe
   id_nadređeni INT,
   id_radno_mjesto INT,
   id_odjel INT,

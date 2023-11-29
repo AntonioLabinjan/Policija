@@ -151,19 +151,18 @@ CREATE TABLE Kaznjiva_djela_u_slucaju (
 CREATE TABLE Izvjestaji (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naslov VARCHAR(255) NOT NULL,
-    sadrzaj TEXT,
-    id_autor INT,
-    id_slucaj INT,
+    sadrzaj TEXT NOT NULL,
+    id_autor INT NOT NULL,
+    id_slucaj INT NOT NULL,
     FOREIGN KEY (id_autor) REFERENCES Zaposlenik(id),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
 );
 
 CREATE TABLE Zapljene (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    opis TEXT,
-    id_slucaj INT,
-    id_predmet INT,
-    Vrijednost NUMERIC (5,2),
+    id_slucaj INT NOT NULL,
+    id_predmet INT NOT NULL,
+    vrijednost NUMERIC (10,2),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
     FOREIGN KEY (id_predmet) REFERENCES Predmet(id)
 );

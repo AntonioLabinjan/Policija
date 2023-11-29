@@ -154,7 +154,7 @@ CREATE TABLE Izvjestaji (
     sadrzaj TEXT,
     id_autor INT,
     id_slucaj INT,
-    FOREIGN KEY (id_autor) REFERENCES Osoba(id),
+    FOREIGN KEY (id_autor) REFERENCES Zaposlenik(id),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
 );
 

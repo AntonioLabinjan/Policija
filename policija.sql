@@ -85,7 +85,9 @@ CREATE TABLE Kaznjiva_djela (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naziv VARCHAR(255) NOT NULL UNIQUE,
     opis TEXT NOT NULL,
-    predvidena_kazna INT
+    predvidena_kazna INT,#zatvorska
+    predvidena_novcana_kazna DECIMAL(10,2)
+    
 );
 
 CREATE TABLE Pas (

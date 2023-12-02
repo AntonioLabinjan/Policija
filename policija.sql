@@ -1,4 +1,3 @@
-# ovo je dobro jeeeeeej :)
 DROP DATABASE IF EXISTS Policija;
 CREATE DATABASE Policija;
 USE Policija;
@@ -8,14 +7,18 @@ CREATE TABLE Podrucje_uprave (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naziv VARCHAR(255) NOT NULL UNIQUE
 );
+# U tablici područje uprave možemo staviti indeks na stupac naziv zato jer je on UNIQUE
+CREATE INDEX idx_naziv_podrucje_uprave ON Podrucje_uprave(naziv);
+
 CREATE TABLE Mjesto (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naziv VARCHAR(255) NOT NULL,
     id_podrucje_uprave INT,
     FOREIGN KEY (Id_Podrucje_Uprave) REFERENCES Podrucje_uprave(Id)
 );
-
-
+# U tablici mjesto možemo staviti indeks na stupac naziv zato jer je on UNIQUE i na stupac id_podrucje_uprave kako bismo ubrzali pretragu po području uprave
+CREATE INDEX idx_naziv_mjesto ON Mjesto(naziv);
+CREATE INDEX idx_id_podrucje_uprave ON Mjesto(id_podrucje_uprave);
 
 CREATE TABLE Zgrada (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -24,18 +27,23 @@ CREATE TABLE Zgrada (
     vrsta_zgrade VARCHAR(30),
     FOREIGN KEY (id_mjesto) REFERENCES Mjesto(ID)
 );
+# U tablici zgrada možemo staviti indeks na stupac adresa zato da ubrzamo pretraživanje po afresi i na stupac id_mjesto da ubrzamo pretragu po mjestima 
+CREATE INDEX idx_adresa_zgrada ON Zgrada(adresa);
+CREATE INDEX idx_id_mjesto_zgrada ON Zgrada(id_mjesto);
 
 CREATE TABLE  Radno_mjesto(
     id INT AUTO_INCREMENT PRIMARY KEY,
     vrsta VARCHAR(255) NOT NULL,
     dodatne_informacije TEXT
 );
+# Ova će tablica sadržavati manji broj redaka i neće se često mijenjati zbog svoje prirode, pa nam ne trebaju indeksi
 
 CREATE TABLE Odjeli (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naziv VARCHAR(255) NOT NULL UNIQUE,
     opis TEXT
 );
+# Ova će tablica sadržavati manji broj redaka i neće se često mijenjati zbog svoje prirode, pa nam ne trebaju indeksi
 
 CREATE TABLE Osoba (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -47,6 +55,10 @@ CREATE TABLE Osoba (
     telefon VARCHAR(20) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE
     );
+# U tablici osoba možemo staviti indekse na stupce oib i email jer su označeni kao unique
+CREATE INDEX idx_oib_osoba ON Osoba(oib);
+CREATE INDEX idx_email_osoba ON Osoba(email);
+
 
 CREATE TABLE Zaposlenik (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,8 +75,11 @@ CREATE TABLE Zaposlenik (
   FOREIGN KEY (id_zgrada) REFERENCES Zgrada(id), # ovo je tipa zatvor di se nalazi/postaja di dela itd.
   FOREIGN KEY (id_osoba) REFERENCES Osoba(id)
 );
-	
-CREATE TABLE Vozilo (
+# U tablici zaposlenik možemo staviti indeks na stupac datum_zaposlenja(ne i na stupac datum_izlaska_iz službe, jer za većinu zaposlenika je taj atribut NULL) i na radno mjesto da bismo mogli pretraživati brže zaposlenike po radnom mjestu
+CREATE INDEX idx_datum_zaposlenja_zaposlenik ON Zaposlenik(datum_zaposlenja);
+CREATE INDEX idx_radno_mjesto_zaposlenik ON Zaposlenik(id_radno_mjesto)	
+
+	CREATE TABLE Vozilo (
     id INT AUTO_INCREMENT PRIMARY KEY,
     marka VARCHAR(255) NOT NULL,
     model VARCHAR(255) NOT NULL,
@@ -74,6 +89,9 @@ CREATE TABLE Vozilo (
     id_vlasnik INT NOT NULL, # ovaj FK se odnosi na privatna/osobna vozila
     FOREIGN KEY (id_vlasnik) REFERENCES Osoba(id)
 );
+# U tablici vozilo možemo staviti indeks na stupac registracija zato što je unique i na id_vlasnik da bismo ubrzali pretragu po vlasniku
+CREATE INDEX idx_registracija_vozilo ON Vozilo(registracija);
+CREATE INDEX idx_id_vlasnik_vozilo ON Vozilo(id_vlasnik);
 
 
 CREATE TABLE Predmet (
@@ -82,6 +100,9 @@ CREATE TABLE Predmet (
     id_mjesto_pronalaska INT,
     FOREIGN KEY (id_mjesto_pronalaska) REFERENCES Mjesto(id)
 );
+# U tablici predmet možemo staviti indekse na stupac naziv zato što nam olakšava pretragu predmeta i na id_mjesto pronalaska kako bismo brže pronalazili mjesto pronalska za predmete
+CREATE INDEX idx_naziv_predmet ON Predmet(naziv);
+CREATE INDEX idx_id_mjesto_pronalaska_predmet ON Predmet(id_mjesto_pronalaska);
 
 CREATE TABLE Kaznjiva_djela (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -91,6 +112,7 @@ CREATE TABLE Kaznjiva_djela (
     predvidena_novcana_kazna DECIMAL(10,2)
     
 );
+# Ova će tablica sadržavati manji broj redaka i neće se često mijenjati zbog svoje prirode, pa nam ne trebaju indeksi
 
 CREATE TABLE Pas (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,
@@ -103,6 +125,8 @@ CREATE TABLE Pas (
     FOREIGN KEY (id_kaznjivo_djelo) REFERENCES Kaznjiva_djela(id)
     );
 
+CREATE INDEX idx_id_kaznjivo_djelo_pas ON Pas(id_kaznjivo_djelo);
+# Kod psa je najbolje indeksirati stupac koji regerencira kaznjiva djela za koja je pas zadužen kako bismo mogli pronalaziti odgovarajuće pse za pojedine slučajeve
 CREATE TABLE Slucaj (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naziv VARCHAR(255) NOT NULL,
@@ -127,6 +151,19 @@ id_ostecenik INT,
 FOREIGN KEY (id_ostecenik) REFERENCES Osoba(id)
 );
 
+# U tablici slučaj, možemo indeksirati stupac početak da bismo brže pretraživali slučajeve po datumu početka
+CREATE INDEX idx_pocetak_slucaj ON Slucaj(pocetak);
+# Možemp indeksirati i sve strane ključeve kako bismo ubrzali pretragu po njima
+CREATE INDEX idx_pocetak_slucaj ON Slucaj(pocetak);
+CREATE INDEX idx_id_pocinitelj_slucaj ON Slucaj(id_pocinitelj);
+CREATE INDEX idx_id_izvjestitelj_slucaj ON Slucaj(id_izvjestitelj);
+CREATE INDEX idx_id_voditelj_slucaj ON Slucaj(id_voditelj);
+CREATE INDEX idx_id_dokaz_slucaj ON Slucaj(id_dokaz);
+CREATE INDEX idx_id_pas_slucaj ON Slucaj(id_pas);
+CREATE INDEX idx_id_svjedok_slucaj ON Slucaj(id_svjedok);
+CREATE INDEX idx_id_ostecenik_slucaj ON Slucaj(id_ostecenik);
+
+
 CREATE TABLE Evidencija_dogadaja (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_slucaj INT,
@@ -136,6 +173,9 @@ CREATE TABLE Evidencija_dogadaja (
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
     FOREIGN KEY (id_mjesto) REFERENCES Mjesto(id)
 );
+# U tablici evidencija događaja možemo indeksirati strane ključeve da ubrzamo pretragu po slučaju i mjestu
+CREATE INDEX idx_id_slucaj_evidencija_dogadaja ON Evidencija_dogadaja(id_slucaj);
+CREATE INDEX idx_id_mjesto_evidencija_dogadaja ON Evidencija_dogadaja(id_mjesto);
 
 
 
@@ -148,7 +188,10 @@ CREATE TABLE Kaznjiva_djela_u_slucaju (
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
     FOREIGN KEY (id_kaznjivo_djelo) REFERENCES Kaznjiva_djela(id)
 );
-
+# Možemo dodati indekse na mjestu, slučaju i kaznjivom djelu kako bismo ubrzali pretragu po svakom od atributa
+CREATE INDEX idx_id_mjesto_kaznjiva_djela ON Kaznjiva_djela_u_slucaju(id_mjesto);
+CREATE INDEX idx_id_slucaj_kaznjiva_djela ON Kaznjiva_djela_u_slucaju(id_slucaj);
+CREATE INDEX idx_id_kaznjivo_djelo_kaznjiva_djela ON Kaznjiva_djela_u_slucaju(id_kaznjivo_djelo);
 
 
 
@@ -161,6 +204,9 @@ CREATE TABLE Izvjestaji (
     FOREIGN KEY (id_autor) REFERENCES Zaposlenik(id),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
 );
+# U tablici izvjestaji možemo indeksirati autora i slucaj kako bismo brže pretraživali izvještaje određenih autora, ili za određene slučajeve
+CREATE INDEX idx_id_autor_izvjestaji ON Izvjestaji(id_autor);
+CREATE INDEX idx_id_slucaj_izvjestaji ON Izvjestaji(id_slucaj);
 
 CREATE TABLE Zapljene (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -170,6 +216,9 @@ CREATE TABLE Zapljene (
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
     FOREIGN KEY (id_predmet) REFERENCES Predmet(id)
 );
+# U tablici zapljene možemo indeksirati slucaj i predmet zbog brže pretrage po tim atriburima
+CREATE INDEX idx_id_slucaj_zapljene ON Zapljene(id_slucaj);
+CREATE INDEX idx_id_predmet_zapljene ON Zapljene(id_predmet);
 
 CREATE TABLE Sredstvo_utvrdivanja_istine ( # ovo je tipa poligraf, alkotest i sl.
 	id INT AUTO_INCREMENT PRIMARY KEY,
@@ -183,6 +232,9 @@ CREATE TABLE Sui_slucaj (
     FOREIGN KEY (id_sui) REFERENCES Sredstvo_utvrdivanja_istine(id),
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id)
 );
+# U tablici sui_slucaj možemo idneksirati id_sui i id_slucaj zbog brže pretrage
+CREATE INDEX idx_id_sui_sui_slucaj ON Sui_slucaj(id_sui);
+CREATE INDEX idx_id_slucaj_sui_slucaj ON Sui_slucaj(id_slucaj);
 
 /*# KORISNICI (autentifikacija/autorizacija)
 -- Kreiranje admin korisnika
@@ -240,6 +292,29 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON Policija.Izvjestaji TO 'detektiv'@'local
 FLUSH PRIVILEGES;
 */
 # TRIGERI
+# Napiši triger koji će onemogućiti da za slučaj koji u sebi ima određena kaznena djela koristimo psa koji nije zadužen za ta ista djela u slučaju
+	DELIMITER //
+
+CREATE TRIGGER bi_pas_slucaj_KD
+BEFORE INSERT ON Slucaj
+FOR EACH ROW
+BEGIN
+    DECLARE id_kaznjivo_djelo_psa INT;
+
+    SELECT id_kaznjivo_djelo INTO id_kaznjivo_djelo_psa
+    FROM Pas
+    WHERE id = NEW.id_pas;
+
+    IF id_kaznjivo_djelo_psa IS NULL OR id_kaznjivo_djelo_psa != NEW.id_kaznjivo_djelo THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Pas nije zadužen za kaznjiva djela u ovom slučaju.';
+    END IF;
+END;
+
+//
+
+DELIMITER ;
+
 # Iako postoji opcija kaskadnog brisanja u SQL-u, ovdje ćemo u nekim slučajevima pomoću trigera htijeti zabraniti brisanje, pošto je važno da neki podaci ostanu zabilježeni. U iznimnim slučajevima možemo ostavljati obavijest da je neka vrijednost obrisana iz baze. Također, u većini slučajeva nam opcija kaskadnog brisanja nikako ne bi odgovarala, zato što je u radu policije važna kontinuirana evidencija
 # Napiši triger koji će a) ako u području uprave više od 5 mjesta, zabraniti brisanje uz obavijest: "Područje uprave s više od 5 mjesta ne smije biti obrisano" b) ako u području uprave ima manje od 5 mjesta, dopustiti da se područje uprave obriše, ali će se onda u mjestima koja referenciraju to područje uprave, pojaviti obavijest "Prvotno područje uprave je obrisano, povežite mjesto s novim područjem"
 DELIMITER //
@@ -1827,11 +1902,13 @@ DELIMITER ;
 
 /* KILLCOUNT:
     18 tables
-    16 triggers
+    17 triggers
     20 queries
     13 views
     10 functions
     30 procedures
+    4 users
+    34 indexes
 */
 
 # Ovo je samo neko testiranje, niš bitno

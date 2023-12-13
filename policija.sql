@@ -611,8 +611,61 @@ END;
 DELIMITER ;
 
 
+-- Triger koji će prije unosa provjeravati jesu li u slučaju počinitelj i svjedok različite osobe. 
+
+DELIMITER //
+CREATE TRIGGER bi_slucaj
+BEFORE INSERT ON slucaj
+FOR EACH ROW
+BEGIN
+
+IF new.id_pocinitelj=new.id_svjedok
+THEN SIGNAL SQLSTATE '40000'
+SET MESSAGE_TEXT = 'Počitelj ne može istovremeno biti svjedok!';
+END IF;
+
+END//
+DELIMITER ;
+ 
+-- Triger koji provjerava je li email dobre strukture
+DELIMITER //
+CREATE TRIGGER bi_osoba
+BEFORE INSERT ON osoba
+FOR EACH ROW
+BEGIN
+IF new.email NOT LIKE '%@%'
+THEN SIGNAL SQLSTATE '40000'
+SET MESSAGE_TEXT = 'Neispravan email';
+END IF;
+END//
+DELIMITER ;
+
 
 # UPITI
+
+ 
+-- Ispiši prosječan broj godina osoba koje su prijavile digitalno nasilje. 
+
+SELECT AVG(YEAR(NOW())-YEAR(osoba.datum_rodenja)) AS prosjecan_broj_godina
+FROM slucaj INNER JOIN osoba ON slucaj.id_izvjestitelj=osoba.id
+WHERE slucaj.naziv LIKE '%digitalno nasilje%';
+
+-- Prikaži osobu čiji je nestanak posljednji prijavljen
+
+SELECT osoba.*
+FROM osoba INNER JOIN slucaj ON osoba.id=slucaj.id_ostecenik
+ORDER BY pocetak DESC
+LIMIT 1;
+
+-- Prikaži najčešću vrstu kažnjivog djela
+
+SELECT kaznjiva_djela.*
+FROM kaznjiva_djela INNER JOIN kaznjiva_djela_u_slucaju
+GROUP BY kaznjiva_djela.id
+ORDER BY COUNT(*)
+LIMIT 1;
+
+
 # Ispišimo sve voditelje slučajeva i slučajeve koje vode
 SELECT O.Ime_Prezime, S.Naziv AS 'Naziv slučaja'
 FROM Zaposlenik Z
@@ -917,6 +970,33 @@ FROM
 WHERE
     PostotakRjesenosti = (SELECT MAX(PostotakRjesenosti) FROM Pregled_Pasa);
 
+-- Napravi pogled koji prikazuje broj kazni zboog brze vožnje u svakom gradu u proteklih mjesec dana. Zatim pomoću upita ispiši grad
+-- u kojem je bilo najviše kazni zbog brze vožnje u proteklih mjesec dana.
+
+CREATE VIEW brza_voznja_gradovi AS
+SELECT mjesto.naziv, COUNT(*) AS broj_kazni_za_brzu_voznju
+FROM mjesto INNER JOIN evidencija_dogadaja ON mjesto.id=evidencija_dogadaja.id_mjesto INNER JOIN slucaj ON evidencija_dogadaja.id_slucaj=slucaj.id
+WHERE slucaj.naziv LIKE '%brza voznja%' AND evidencija_dogadaja.datum_vrijeme >= (NOW() - INTERVAL 1 MONTH)
+GROUP BY mjesto.naziv;
+
+SELECT *
+FROM brza_voznja_gradovi
+ORDER BY broj_kazni_za_brzu_voznju DESC
+LIMIT 1; 
+
+-- Napravi pogled koji prikazuje sve osobe koje su skrivile više od 2 prometne nesreće u posljednjih godinu dana. 
+-- Zatim napravi upit koji će prikazati osobu koja je skrivila najviše prometnih nesreća u posljednjih godinu dana.
+
+CREATE VIEW osoba_prometna_nesreca AS
+SELECT osoba.*, COUNT(*) AS broj_prometnih_nesreca
+FROM osoba INNER JOIN slucaj ON osoba.id=slucaj.id_pocinitelj INNER JOIN evidencija_dodagaja ON slucaj.id=evidencija_dogadaja.id_slucaj
+WHERE evidencija_dogadaja.datum_vrijeme <= (NOW() - INTERVAL 1 YEAR) AND COUNT(*)>2 AND slucaj.naziv LIKE '%prometna nesreca%'
+GROUP BY id_osoba;
+
+SELECT *
+FROM osoba_prometna_nesreca
+ORDER BY broj_prometnih_nesreca DESC
+LIMIT 1;
 
 # PROCEDURE
 # Napiši proceduru za unos novog područja uprave
@@ -1897,15 +1977,64 @@ END;
 //
 DELIMITER ;
 
+-- Napiši funckiju koja će za zaposlenika definiranog parametron p_id_zaposlenik izbrojiti broj slučajeva na kojima je on bio voditelj i izračunati 
+-- postotak rješenosti tih slučajeva te na temelju toga ispiše je li zaposlenik neuspješan (0%-49%) ili uspješan (50%-100%).
 
+DELIMITER //
+CREATE FUNCTION zaposlenik_slucaj(p_id_zaposlenik INT) RETURNS INT
+DETERMINISTIC
+BEGIN
+
+DECLARE l_broj INT;
+DECLARE l_broj_rijeseni INT;
+DECLARE l_postotak DECIMAL (5, 2);
+
+SELECT COUNT(*) INTO l_broj
+FROM slucaj
+WHERE id_voditelj=p_id_zaposlenik;
+
+SELECT COUNT(*) INTO l_broj_rijeseni
+FROM slucaj
+WHERE id_voditelj=p_id_zaposlenik AND status='Riješen';
+
+SET l_postotak=(l_broj_rijeseni/l_broj)*100;
+
+IF l_postotak<=49
+THEN RETURN "neuspješan";
+ELSE RETURN "uspješan";
+END IF;
+
+END//
+DELIMITER ;
+
+-- Napiši funkciju koja će za osobu definiranu parametrom p_id_osoba vratiti "DA" ako je barem jednom bila oštećenik u nekom slučaju, a u 
+-- protivnom će vratiti "NE."
+
+DELIMITER //
+CREATE FUNCTION osoba_ostecenik(p_id_osoba INT) RETURNS CHAR(2)
+DETERMINISTIC
+BEGIN
+
+DECLARE l_broj INT;
+SELECT COUNT(*) INTO l_broj
+FROM slucaj
+WHERE id_ostecenik=p_id_osoba;
+
+IF l_broj>0
+THEN RETURN "DA";
+ELSE RETURN "NE";
+END IF;
+
+END//
+DELIMITER ;
 # IDEJA; ZA INSERTANJE KORISTIMO TRANSAKCIJE U KOJIMA POZIVAMO PROCEDURE ZA INSERT U POJEDINE TABLICE
 
 /* KILLCOUNT:
     18 tables
-    17 triggers
-    20 queries
-    13 views
-    10 functions
+    19 triggers
+    25 queries
+    16 views
+    13 functions
     30 procedures
     4 users
     34 indexes

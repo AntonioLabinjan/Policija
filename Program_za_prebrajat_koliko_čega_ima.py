@@ -2,7 +2,7 @@
 
 def broj_rijeci_u_tekstu(text, keywords):
   rez = {key: text.lower().count(key.lower()) for key in keywords}
-         return rez
+  return rez
 
 print("Paste your text:")
 input_text = input()

@@ -118,7 +118,7 @@ CREATE TABLE Pas (
     id INTEGER AUTO_INCREMENT PRIMARY KEY,
     id_trener INTEGER, # to je osoba zadužena za rad s psom
     oznaka VARCHAR(255) UNIQUE, # pretpostavljan da je ovo unikatno za svakega psa; ima mi logike 
-    dob INTEGER NOT NULL,
+    godina_rođenja INTEGER NOT NULL,
     status VARCHAR(255),
     id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.
     FOREIGN KEY (id_trener) REFERENCES Zaposlenik(id),

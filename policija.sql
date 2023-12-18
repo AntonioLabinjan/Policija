@@ -1165,14 +1165,14 @@ DELIMITER //
 CREATE PROCEDURE Dodaj_Novog_Psa(
     IN p_id_trener INTEGER,
     IN p_oznaka VARCHAR(255),
-    IN p_dob INTEGER,
+    IN p_godina_rođenja INTEGER,
     IN p_status VARCHAR(255),
     IN p_id_kaznjivo_djelo INTEGER
 )
 BEGIN
     -- Unos novog psa
-    INSERT INTO Pas (id_trener, oznaka, dob, status, id_kaznjivo_djelo)
-    VALUES (p_id_trener, p_oznaka, p_dob, p_status, p_id_kaznjivo_djelo);
+    INSERT INTO Pas (id_trener, oznaka, godina_rođenja, status, id_kaznjivo_djelo)
+    VALUES (p_id_trener, p_oznaka, p_godina_rođenja, p_status, p_id_kaznjivo_djelo);
 END //
 
 DELIMITER ;

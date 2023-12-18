@@ -531,6 +531,21 @@ END;
 //
 DELIMITER ;
 
+DELIMITER //
+
+CREATE TRIGGER bu_pas
+BEFORE UPDATE ON Pas
+FOR EACH ROW
+BEGIN
+    DECLARE nova_dob INTEGER;
+    SET nova_dob = YEAR(NOW()) - NEW.godina_rođenja;
+    IF nova_dob >= 10 AND OLD.godina_rođenja <> nova_godina_rodenja THEN
+        SET NEW.status = 'Časno umirovljen';
+    END IF;
+END;
+//
+DELIMITER ;
+
 # Napravi triger koji će, u slučaju da je pas časno umirovljen koristeći triger (ili ručno), onemogućiti da ga koristimo u novim slučajevima
 DELIMITER //
 CREATE TRIGGER bi_slucaj_pas

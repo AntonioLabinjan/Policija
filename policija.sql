@@ -2071,6 +2071,8 @@ CALL Dodaj_Novo_Kaznjivo_Djelo('Dijamantna pljačka', 'Oružana pljačka dragulj
 
 COMMIT;
 
+# napravit proceduru koja će provjeravat dali je zatvoreniku istekla kazna ili ne
+
 /* KILLCOUNT:
     18 tables
     19 triggers

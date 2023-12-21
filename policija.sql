@@ -120,11 +120,10 @@ CREATE TABLE Pas (
     oznaka VARCHAR(255) UNIQUE, # pretpostavljan da je ovo unikatno za svakega psa; ima mi logike 
     godina_rođenja INTEGER NOT NULL,
     status VARCHAR(255),
-    id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.
+    id_kaznjivo_djelo INTEGER,# dali je pas za drogu/ljude/oružje itd.	
     FOREIGN KEY (id_trener) REFERENCES Zaposlenik(id),
     FOREIGN KEY (id_kaznjivo_djelo) REFERENCES Kaznjiva_djela(id)
     );
-
 CREATE INDEX idx_id_kaznjivo_djelo_pas ON Pas(id_kaznjivo_djelo);
 # Kod psa je najbolje indeksirati stupac koji regerencira kaznjiva djela za koja je pas zadužen kako bismo mogli pronalaziti odgovarajuće pse za pojedine slučajeve
 CREATE TABLE Slucaj (
@@ -163,7 +162,7 @@ CREATE INDEX idx_id_pas_slucaj ON Slucaj(id_pas);
 CREATE INDEX idx_id_svjedok_slucaj ON Slucaj(id_svjedok);
 CREATE INDEX idx_id_ostecenik_slucaj ON Slucaj(id_ostecenik);
 
-
+# U prezentaciji spomenut da je ovo evidencija nekriminalnih događaja (npr. izlazak policajca na uviđaj, ispitivanje svjedoka itd.)
 CREATE TABLE Evidencija_dogadaja (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_slucaj INT,
@@ -216,7 +215,7 @@ CREATE TABLE Zapljene (
     FOREIGN KEY (id_slucaj) REFERENCES Slucaj(id),
     FOREIGN KEY (id_predmet) REFERENCES Predmet(id)
 );
-# U tablici zapljene možemo indeksirati slucaj i predmet zbog brže pretrage po tim atriburima
+# U tablici zapljene možemo indeksirati slucaj i predmet zbog brže pretrage po tim atributima
 CREATE INDEX idx_id_slucaj_zapljene ON Zapljene(id_slucaj);
 CREATE INDEX idx_id_predmet_zapljene ON Zapljene(id_predmet);
 
@@ -717,6 +716,7 @@ FROM Slucaj
 LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.id_slucaj
 GROUP BY Slucaj.ID;
 
+# OVO MOREMO UBACIT U POGLED
 # Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska)
 SELECT K.Naziv, K.Opis
 FROM Kaznjiva_Djela_u_Slucaju KS
@@ -1369,10 +1369,6 @@ BEGIN
     SELECT id_pas, COUNT(*) AS BrojSlucajeva
     FROM Slucaj
     GROUP BY id_pas;
-
-    
-    ALTER TABLE Pas ADD COLUMN Status VARCHAR(255);
-
     
     UPDATE Pas
     SET Status = 'nagrađeni pas'
@@ -1662,7 +1658,7 @@ CALL IspisiPodatkeOSlucajevimaIZapljenama;
 # FUNKCIJE + upiti za funkcije
 # Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
-CREATE FUNCTION KDInfo(naziv_kaznenog_djela VARCHAR(255)) RETURNS TEXT
+CREATE FUNCTION KDInfo(naziv_kaznjivog_djela VARCHAR(255)) RETURNS TEXT
 DETERMINISTIC
 BEGIN
     DECLARE predvidena_kazna INT;
@@ -1670,7 +1666,7 @@ BEGIN
     
     SELECT predvidena_kazna INTO predvidena_kazna
     FROM Kaznjiva_djela
-    WHERE Naziv = naziv_kaznenog_djela;
+    WHERE Naziv = naziv_kaznjivog_djela;
 
     SELECT COUNT(*) INTO broj_pojavljivanja
     FROM Kaznjiva_Djela_u_Slucaju
@@ -1685,7 +1681,7 @@ SELECT KDInfo('NazivKaznenogDjela');
 
 # Napiši upit koji će koristeći ovu funkciju izlistati sva kaznena djela koja su se dogodila u 2023. godini (ili nekoj drugoj) i njihov broj pojavljivanja
 SELECT
-    KDInfo(KD.Naziv) AS KaznenoDjeloInfo,
+    KDInfo(KD.Naziv) AS KaznjivoDjeloInfo,
     COUNT(KS.id_kaznjivo_djelo) AS BrojPojavljivanja
 FROM Kaznjiva_Djela_u_Slucaju KS
 INNER JOIN Kaznjiva_djela KD ON KS.id_kaznjivo_djelo = KD.ID
@@ -1726,15 +1722,16 @@ WHERE Osoba.id NOT IN(SELECT id_osoba FROM Zaposlenik);
 # NAPIŠI SQL FUNKCIJU KOJA ĆE SLUŽITI ZA UNAPRIJEĐENJE POLICIJSKIH SLUŽBENIKA. Za argument će primati id osobe koju unaprijeđujemo i id novog radnog mjesta na koje je unaprijeđujemo. Taj će novi radno_mjesto_id zamjeniti stari. Također će provjeravati je li slučajno novi radno_mjesto_id jednak radno_mjesto_id-ju osobe koja je nadređena osobi koju unaprijeđujemo. Ako jest, postavit ćemo nadređeni_id na NULL zato što nam ne može biti nadređena osoba ista po činu
 SET SQL_safe_updates = 0;
 # SELECT UnaprijediPolicijskogSluzbenika(4, 6);
+# ovo bi moglo kao procedura, ALI NE I KAO FUNKCIJA
 DELIMITER //
-CREATE FUNCTION UnaprijediPolicijskogSluzbenika(id_osoba	INT, novo_radno_mjesto_id INT)
+CREATE FUNCTION UnaprijediPolicijskogSluzbenika(id_osoba INT, novo_radno_mjesto_id INT)
 RETURNS VARCHAR(255)
 DETERMINISTIC
 BEGIN
     DECLARE stari_radno_mjesto_id INT;
     DECLARE stari_nadredeni_id INT;
 
-    SELECT id_radno_mjesto, id_nadređeni	INTO stari_radno_mjesto_id, stari_nadredeni_id
+    SELECT id_radno_mjesto, id_nadređeni INTO stari_radno_mjesto_id, stari_nadredeni_id
     FROM Zaposlenik
     WHERE 
     id_osoba = id_osoba;
@@ -2073,6 +2070,7 @@ CALL Dodaj_Novo_Kaznjivo_Djelo('Dijamantna pljačka', 'Oružana pljačka dragulj
 COMMIT;
 
 # napravit proceduru koja će provjeravat dali je zatvoreniku istekla kazna ili ne
+# triger koji zabranjuje da isti zaposlenik ima previše aktivnih slučajeva na kojima radi (prebrojava broj slučajeva uz uvjet da id_zaposlenik = zaposlenik.id i ima COUNT veći od 4)
 
 /* KILLCOUNT:
     18 tables
@@ -2085,15 +2083,3 @@ COMMIT;
     34 indexes
 */
 
-# Ovo je samo neko testiranje, niš bitno
-/*CALL Dodaj_Novo_Kaznjivo_Djelo('Kaznivo Djelo 1', 'Opis prvog kaznenog djela', 1000);
-CALL Dodaj_Novo_Kaznjivo_Djelo('Kaznivo Djelo 2', 'Opis drugog kaznenog djela', 1500);
-CALL Dodaj_Novo_Kaznjivo_Djelo('Kaznivo Djelo 3', 'Opis trećeg kaznenog djela', 800);
-
-SELECT * FROM kaznjiva_djela;
-SET SQL_SAFE_UPDATES = 0;
-
-DELETE FROM kaznjiva_djela;
-*/
-
-# Autentifikacija i autorizacija; nekako dodat neke osnove

@@ -688,20 +688,6 @@ JOIN Osoba O ON Z.id_osoba = O.Id
 JOIN Slucaj S ON Z.Id = S.id_voditelj;
 
 
-# Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
-SELECT O.Ime_Prezime, S.Naziv AS 'Naziv slučaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto
-FROM Slucaj S
-JOIN Evidencija_dogadaja ED ON S.Id = ED.id_slucaj
-JOIN Osoba O ON O.Id = S.id_pocinitelj
-WHERE O.Ime_Prezime = 'Ime Prezime';
-
-# Ispišimo sve osobe koje su osumnjičene za određeno KD
-SELECT DISTINCT O.Ime_Prezime
-FROM Osoba O
-JOIN Slucaj S ON O.Id = S.id_pocinitelj
-JOIN Kaznjiva_djela_u_slucaju	KD ON S.Id = KD.id_slucaj
-JOIN Kaznjiva_djela	K ON KD.id_kaznjivo_djelo = K.id
-WHERE K.Naziv = 'Naziv kaznenog djela';
 
 # Pronađimo sve slučajeve koji sadrže KD i nisu riješeni
 SELECT Slucaj.Naziv, Kaznjiva_djela.Naziv AS KaznjivoDjelo
@@ -717,21 +703,6 @@ FROM Slucaj
 LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.id_slucaj
 GROUP BY Slucaj.ID;
 
-# OVO MOREMO UBACIT U POGLED
-# Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska)
-SELECT K.Naziv, K.Opis
-FROM Kaznjiva_Djela_u_Slucaju KS
-JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo= K.ID
-JOIN Evidencija_Dogadaja ED ON KS.id_slucaj= ED.id_slucaj
-WHERE ED.id_mjesto=1;
-
-# Ovo isto u pogled
-# Nađimo  sve događaje koji su odvijali u slučajevima koji uključuju pojedino kažnjivo djelo
-SELECT E.Opis_Dogadaja, E.Datum_Vrijeme
-FROM Evidencija_Dogadaja E
-JOIN Slucaj S ON E.id_slucaj = S.Id
-JOIN Kaznjiva_Djela_u_Slucaju KS ON S.Id = KS.id_slucaj
-WHERE KS.id_kaznjivo_djelo = 1; # ovo moremo izmjenit
 
 # Pronađi prosječnu vrijednost zapljene za pojedina kaznena djela
 SELECT K.Naziv AS VrstaKaznenogDjela, AVG(Z.Vrijednost) AS ProsječnaVrijednostZapljene
@@ -1029,6 +1000,39 @@ SELECT *
 FROM osoba_prometna_nesreca
 ORDER BY broj_prometnih_nesreca DESC
 LIMIT 1;
+
+# Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
+# OVO MI JE TOTALNO ČUDNO. Koja je točno poanta? Jer evidencija se praktički vodi za slučaj, a ne za osobu. A osoba se vodi u slučaju.
+CREATE VIEW Pogled_Osobe_Slucajevi_Evidencije AS
+SELECT O.Ime_Prezime, S.Naziv AS 'Naziv_slucaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto
+FROM Slucaj S
+JOIN Evidencija_dogadaja ED ON S.Id = ED.id_slucaj
+JOIN Osoba O ON O.Id = S.id_pocinitelj;
+
+
+# Ispišimo sve osobe koje su osumnjičene za određeno KD
+CREATE VIEW Pogled_Osumnjicene_Osobe_Za_KD AS
+SELECT DISTINCT O.Ime_Prezime
+FROM Osoba O
+JOIN Slucaj S ON O.Id = S.id_pocinitelj
+JOIN Kaznjiva_djela_u_slucaju KD ON S.Id = KD.id_slucaj
+JOIN Kaznjiva_djela K ON KD.id_kaznjivo_djelo = K.id;
+
+
+
+# Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska)
+CREATE VIEW Pogled_Kaznjiva_Djela_Na_Mjestu AS
+SELECT K.Naziv, K.Opis
+FROM Kaznjiva_Djela_u_Slucaju KS
+JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo = K.ID
+JOIN Evidencija_Dogadaja ED ON KS.id_slucaj = ED.id_slucaj;
+
+# Nađimo  sve događaje koji su odvijali u slučajevima koji uključuju pojedino kažnjivo djelo
+CREATE VIEW Pogled_Dogadaji_Za_Kaznjivo_Djelo AS
+SELECT E.Opis_Dogadaja, E.Datum_Vrijeme
+FROM Evidencija_Dogadaja E
+JOIN Slucaj S ON E.id_slucaj = S.Id
+JOIN Kaznjiva_Djela_u_Slucaju KS ON S.Id = KS.id_slucaj;
 
 # PROCEDURE
 # Napiši proceduru za unos novog područja uprave
@@ -2092,8 +2096,8 @@ COMMIT;
 /* KILLCOUNT:
     18 tables
     19 triggers
-    27 queries
-    16 views
+    23 queries
+    20 views
     13 functions
     30 procedures
     4 users

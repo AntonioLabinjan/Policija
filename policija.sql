@@ -767,6 +767,21 @@ GROUP BY O.Id, O.Ime_Prezime
 ORDER BY Ukupna_kazna DESC
 LIMIT 1;
 
+-- 1. Prikaži sva vozila i u koliko slučajeva su se oni upisali
+SELECT vozilo.*, COUNT(Slucaj.id) AS broj_slucajeva
+FROM Vozilo LEFT OUTER JOIN Osoba ON Vozilo.id_vlasnik = Osoba.id
+INNER JOIN Slucaj ON Osoba.id = Slucaj.id_pocinitelj
+GROUP BY Vozilo.id;
+
+-- 2. Ispišimo koje mjesto ima najviše slučajeva
+SELECT Mjesto.*, COUNT(Evidencija_dogadaja.id) AS kol_slucajeva
+FROM Mjesto INNER JOIN Evidencija_dogadaja ON Mjesto.id = Evidencija_dogadaja.id_mjesto
+GROUP BY Mjesto.id
+ORDER BY kol_slucajeva DESC
+LIMIT 1;
+
+-- tu isto tako možemo pokazati i mjesto gdje ima najmanje slučajeva samo ako napisemo asc
+
 # Pronađi policijskog službenika koji je vodio najviše slučajeva
 SELECT
     z.Id AS Zaposlenik_Id,
@@ -2077,7 +2092,7 @@ COMMIT;
 /* KILLCOUNT:
     18 tables
     19 triggers
-    25 queries
+    27 queries
     16 views
     13 functions
     30 procedures

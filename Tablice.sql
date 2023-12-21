@@ -1,8 +1,3 @@
-DROP DATABASE IF EXISTS Policija;
-CREATE DATABASE Policija;
-USE Policija;
-
-# TABLICE
 CREATE TABLE Podrucje_uprave (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naziv VARCHAR(255) NOT NULL UNIQUE
@@ -77,7 +72,7 @@ CREATE TABLE Zaposlenik (
 );
 # U tablici zaposlenik možemo staviti indeks na stupac datum_zaposlenja(ne i na stupac datum_izlaska_iz službe, jer za većinu zaposlenika je taj atribut NULL) i na radno mjesto da bismo mogli pretraživati brže zaposlenike po radnom mjestu
 CREATE INDEX idx_datum_zaposlenja_zaposlenik ON Zaposlenik(datum_zaposlenja);
-CREATE INDEX idx_radno_mjesto_zaposlenik ON Zaposlenik(id_radno_mjesto)	
+CREATE INDEX idx_radno_mjesto_zaposlenik ON Zaposlenik(id_radno_mjesto)	;
 
 	CREATE TABLE Vozilo (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -137,7 +132,7 @@ CREATE TABLE Slucaj (
     id_izvjestitelj INT,
     id_voditelj INT,
     id_dokaz INT,
-    ukupna_vrijednost_zapljena INT,
+    ukupna_vrijednost_zapljena INT DEFAULT 0,
     id_pas INT,
     id_svjedok INT,
 id_ostecenik INT,
@@ -234,3 +229,4 @@ CREATE TABLE Sui_slucaj (
 # U tablici sui_slucaj možemo idneksirati id_sui i id_slucaj zbog brže pretrage
 CREATE INDEX idx_id_sui_sui_slucaj ON Sui_slucaj(id_sui);
 CREATE INDEX idx_id_slucaj_sui_slucaj ON Sui_slucaj(id_slucaj);
+########################################################################################################################################################################################

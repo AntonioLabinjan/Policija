@@ -1308,6 +1308,7 @@ END //
 DELIMITER ;
 
 # Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
+# Ubacit scheduled dnevno izvođenje procedure
 DELIMITER //
 CREATE PROCEDURE DodajBrojDanaUZatvoru()
 BEGIN

@@ -224,19 +224,6 @@ END;
 //
 DELIMITER ;
 
-# Napravi triger koji će, u slučaju da ažuriramo godine psa i one iznose 10 ili više, pas će biti automatski časno umirovljen
-DELIMITER //
-
-CREATE TRIGGER bu_pas
-BEFORE UPDATE ON Pas
-FOR EACH ROW
-BEGIN
-    IF NEW.dob >= 10 AND OLD.dob <> NEW.dob THEN
-        SET NEW.status = 'Časno umirovljen';
-    END IF;
-END;
-//
-DELIMITER ;
 
 DELIMITER //
 

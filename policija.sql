@@ -77,7 +77,7 @@ CREATE TABLE Zaposlenik (
 );
 # U tablici zaposlenik možemo staviti indeks na stupac datum_zaposlenja(ne i na stupac datum_izlaska_iz službe, jer za većinu zaposlenika je taj atribut NULL) i na radno mjesto da bismo mogli pretraživati brže zaposlenike po radnom mjestu
 CREATE INDEX idx_datum_zaposlenja_zaposlenik ON Zaposlenik(datum_zaposlenja);
-CREATE INDEX idx_radno_mjesto_zaposlenik ON Zaposlenik(id_radno_mjesto)	
+CREATE INDEX idx_radno_mjesto_zaposlenik ON Zaposlenik(id_radno_mjesto)	;
 
 	CREATE TABLE Vozilo (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -660,7 +660,8 @@ DELIMITER ;
  
 -- Ispiši prosječan broj godina osoba koje su prijavile digitalno nasilje. 
 
-SELECT AVG(YEAR(NOW())-YEAR(osoba.datum_rodenja)) AS prosjecan_broj_godina
+
+SELECT AVG(YEAR(slucaj.pocetak)-YEAR(osoba.datum_rodenja)) AS prosjecan_broj_godina
 FROM slucaj INNER JOIN osoba ON slucaj.id_izvjestitelj=osoba.id
 WHERE slucaj.naziv LIKE '%digitalno nasilje%';
 
@@ -688,7 +689,7 @@ JOIN Slucaj S ON Z.Id = S.id_voditelj;
 
 
 # Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
-SELECT S.Naziv AS 'Naziv slučaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto
+SELECT O.Ime_Prezime, S.Naziv AS 'Naziv slučaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto
 FROM Slucaj S
 JOIN Evidencija_dogadaja ED ON S.Id = ED.id_slucaj
 JOIN Osoba O ON O.Id = S.id_pocinitelj
@@ -724,7 +725,8 @@ JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo= K.ID
 JOIN Evidencija_Dogadaja ED ON KS.id_slucaj= ED.id_slucaj
 WHERE ED.id_mjesto=1;
 
-# Nađimo  sve događaje koji uključuju pojedino kažnjivo djelo
+# Ovo isto u pogled
+# Nađimo  sve događaje koji su odvijali u slučajevima koji uključuju pojedino kažnjivo djelo
 SELECT E.Opis_Dogadaja, E.Datum_Vrijeme
 FROM Evidencija_Dogadaja E
 JOIN Slucaj S ON E.id_slucaj = S.Id
@@ -2082,4 +2084,3 @@ COMMIT;
     4 users
     34 indexes
 */
-

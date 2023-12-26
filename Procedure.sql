@@ -640,3 +640,36 @@ DELIMITER ;
 
 
 CALL IspisiPodatkeOSlucajevimaIZapljenama;
+
+# Napiši proceduru koja će služiti za unaprijeđenje policijskih službenika na novo radno mjesto. Ako je novo radno mjesto jednako onom radnom mjestu osobe koja im je prije bila nadređena, postaviti će id_nadređeni na NULL
+DELIMITER //
+
+CREATE PROCEDURE UnaprijediPolicijskogSluzbenika(
+    IN p_id_osoba INT, 
+    IN p_novo_radno_mjesto_id INT
+)
+BEGIN
+    DECLARE stari_radno_mjesto_id INT;
+    DECLARE stari_nadredeni_id INT;
+    DECLARE radno_mjesto_nadredenog INT;
+
+    SELECT id_radno_mjesto, id_nadređeni INTO stari_radno_mjesto_id, stari_nadredeni_id
+    FROM Zaposlenik
+    WHERE id_osoba = p_id_osoba;
+
+    SELECT id_radno_mjesto INTO radno_mjesto_nadredenog
+    FROM Zaposlenik
+    WHERE id_osoba = stari_nadredeni_id;
+
+    IF radno_mjesto_nadredenog = p_novo_radno_mjesto_id THEN
+        UPDATE Zaposlenik
+        SET id_nadređeni = NULL
+        WHERE id_osoba = p_id_osoba;
+    ELSE
+        UPDATE Zaposlenik
+        SET id_radno_mjesto = novo_radno_mjesto_id_param
+        WHERE id_osoba = p_id_osoba;
+    END IF;
+END //
+
+DELIMITER ;

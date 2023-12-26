@@ -352,3 +352,51 @@ END IF;
 
 END//
 DELIMITER ;
+
+# Napiši funkciju koja će za osobu određenu predanim id_jem odrediti sve uloge koje je ta osoba imala u slučajevima
+DELIMITER //
+
+CREATE FUNCTION Uloge_Osobe_U_Slucajevima(osoba_id INT) RETURNS VARCHAR(255)
+DETERMINISTIC
+BEGIN
+    DECLARE uloge VARCHAR(255);
+
+    SELECT 
+        CONCAT('Osoba je u slučajevima bila: ',
+            CASE WHEN os.id = s.id_pocinitelj THEN 'pocinitelj ' ELSE '' END,
+            CASE WHEN os.id = s.id_izvjestitelj THEN 'izvjestitelj ' ELSE '' END,
+            CASE WHEN os.id = s.id_voditelj THEN 'voditelj ' ELSE '' END,
+            CASE WHEN os.id = s.id_svjedok THEN 'svjedok ' ELSE '' END,
+            CASE WHEN os.id = s.id_ostecenik THEN 'ostecenik ' ELSE '' END) INTO uloge
+    FROM Slucaj s
+    LEFT JOIN Osoba os ON os.id = osoba_id
+    WHERE os.id IN (s.id_pocinitelj, s.id_izvjestitelj, s.id_voditelj, s.id_svjedok, s.id_ostecenik)
+    LIMIT 1;
+
+    -- Ako osoba ima više od jedne uloge u istom slučaju, dodajemo ih u rezultat
+    SELECT 
+        CONCAT('Osoba je u slučajevima bila: ',
+            CASE WHEN os.id = s.id_pocinitelj THEN 'pocinitelj ' ELSE '' END,
+            CASE WHEN os.id = s.id_izvjestitelj THEN 'izvjestitelj ' ELSE '' END,
+            CASE WHEN os.id = s.id_voditelj THEN 'voditelj ' ELSE '' END,
+            CASE WHEN os.id = s.id_svjedok THEN 'svjedok ' ELSE '' END,
+            CASE WHEN os.id = s.id_ostecenik THEN 'ostecenik ' ELSE '' END) 
+    INTO uloge
+    FROM Slucaj s
+    LEFT JOIN Osoba os ON os.id = osoba_id
+    WHERE os.id IN (s.id_pocinitelj, s.id_izvjestitelj, s.id_voditelj, s.id_svjedok, s.id_ostecenik)
+    AND os.id != s.id_pocinitelj AND os.id != s.id_izvjestitelj AND os.id != s.id_voditelj AND os.id != s.id_svjedok AND os.id != s.id_ostecenik;
+
+    -- Ako osoba nije bila ništa u slučajevima
+    IF uloge IS NULL THEN
+        SET uloge = 'Osoba nije bila u niti jednom slučaju';
+    END IF;
+
+    RETURN uloge;
+END //
+
+DELIMITER ;
+
+# UPIT KOJI ĆE DOHVATITI SVE OSOBE I NJIHOVE ULOGE U SLUČAJEVIMA
+SELECT id, ime_prezime, UlogeOsobeUSlucajevima(id) AS uloge
+FROM Osoba;

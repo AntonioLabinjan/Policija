@@ -400,3 +400,33 @@ DELIMITER ;
 # UPIT KOJI ĆE DOHVATITI SVE OSOBE I NJIHOVE ULOGE U SLUČAJEVIMA
 SELECT id, ime_prezime, UlogeOsobeUSlucajevima(id) AS uloge
 FROM Osoba;
+
+DELIMITER //
+# Funkcija koja će vratiti je li osoba sumnjiva (već je osumnjičena na nekim slučajevima) ili nije sumnjiva
+    
+CREATE FUNCTION Sumnjivost_Osobe(osoba_id INT) RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+    DECLARE broj_slucajeva INT;
+    DECLARE sumnjivost VARCHAR(50);
+
+    SELECT COUNT(*) INTO broj_slucajeva
+    FROM Slucaj
+    WHERE id_okrivljenik = osoba_id;
+
+    IF broj_slucajeva > 10 THEN
+        SET sumnjivost = 'Jako sumnjiva';
+    ELSEIF broj_slucajeva > 0 THEN
+        SET sumnjivost = 'Umjereno sumnjiva';
+    ELSE
+        SET sumnjivost = 'Nije sumnjiva';
+    END IF;
+
+    RETURN sumnjivost;
+END //
+
+DELIMITER ;
+
+# Napiši upit koji će dohvatiti sve osobe, pa i policajce; nije nemoguće da policajac bude kriminalac :) i podatke o njihovoj sumnjivosti
+SELECT id, ime_prezime, SumnjivostOsobe(id) AS sumnjivost
+FROM Osoba;

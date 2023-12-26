@@ -64,37 +64,6 @@ WHERE Osoba.id NOT IN(SELECT id_osoba FROM Zaposlenik);
 
 # NAPIŠI SQL FUNKCIJU KOJA ĆE SLUŽITI ZA UNAPRIJEĐENJE POLICIJSKIH SLUŽBENIKA. Za argument će primati id osobe koju unaprijeđujemo i id novog radnog mjesta na koje je unaprijeđujemo. Taj će novi radno_mjesto_id zamjeniti stari. Također će provjeravati je li slučajno novi radno_mjesto_id jednak radno_mjesto_id-ju osobe koja je nadređena osobi koju unaprijeđujemo. Ako jest, postavit ćemo nadređeni_id na NULL zato što nam ne može biti nadređena osoba ista po činu
 SET SQL_safe_updates = 0;
-# SELECT UnaprijediPolicijskogSluzbenika(4, 6);
-# ovo bi moglo kao procedura, ALI NE I KAO FUNKCIJA
-DELIMITER //
-CREATE FUNCTION UnaprijediPolicijskogSluzbenika(id_osoba INT, novo_radno_mjesto_id INT)
-RETURNS VARCHAR(255)
-DETERMINISTIC
-BEGIN
-    DECLARE stari_radno_mjesto_id INT;
-    DECLARE stari_nadredeni_id INT;
-
-    SELECT id_radno_mjesto, id_nadređeni INTO stari_radno_mjesto_id, stari_nadredeni_id
-    FROM Zaposlenik
-    WHERE 
-    id_osoba = id_osoba;
-    IF novo_radno_mjesto_id = stari_radno_mjesto_id THEN
-        UPDATE Zaposlenik
-        SET id_nadređeni
-        = NULL
-        WHERE id_osoba = id_osoba;
-        RETURN 'Unaprijeđeni službenik nema istog nadređenog.';
-    ELSE
-        UPDATE Zaposlenik
-        SET id_radno_mjesto
-        = novo_radno_mjesto_id
-        WHERE id_osoba = id_osoba;
-        RETURN 'Službenik uspješno unaprijeđen.';
-    END IF;
-END;
-//
-DELIMITER ;
-DROP FUNCTION UnaprijediPolicijskogSluzbenika;
 # Napiši funkciju koja će za određeni predmet vratiti slučaj u kojem je taj predmet dokaz i osobu koja je u tom slučaju osumnjičena
 DELIMITER //
 

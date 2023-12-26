@@ -2237,6 +2237,36 @@ DELIMITER ;
 SELECT id, ime_prezime, UlogeOsobeUSlucajevima(id) AS uloge
 FROM Osoba;
 
+# Napiši funkciju koja će primiti id_osoba i za tu osobu vratiti je li ta osoba sumnjiva ili ne, ovisno o broju slučajeva na kojima je osumnjičena
+DELIMITER //
+
+CREATE FUNCTION Sumnjivost_Osobe(osoba_id INT) RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+    DECLARE broj_slucajeva INT;
+    DECLARE sumnjivost VARCHAR(50);
+
+    SELECT COUNT(*) INTO broj_slucajeva
+    FROM Slucaj
+    WHERE id_okrivljenik = osoba_id;
+
+    IF broj_slucajeva > 10 THEN
+        SET sumnjivost = 'Jako sumnjiva';
+    ELSEIF broj_slucajeva > 0 THEN
+        SET sumnjivost = 'Umjereno sumnjiva';
+    ELSE
+        SET sumnjivost = 'Nije sumnjiva';
+    END IF;
+
+    RETURN sumnjivost;
+END //
+
+DELIMITER ;
+
+# Napiši upit koji će dohvatiti sve osobe, pa i policajce; nije nemoguće da policajac bude kriminalac :) i podatke o njihovoj sumnjivosti
+SELECT id, ime_prezime, SumnjivostOsobe(id) AS sumnjivost
+FROM Osoba;
+	
 ###############################################################################################################################################################
 # IDEJA; ZA INSERTANJE KORISTIMO TRANSAKCIJE U KOJIMA POZIVAMO PROCEDURE ZA INSERT U POJEDINE TABLICE
 # Ova transakcija dole je čisto ideja. Ovo uopće ne mora bit u projektu; nego me čisto zanimalo dali se to more napravit
@@ -2273,9 +2303,9 @@ COMMIT;
 /* KILLCOUNT:
     18 tables
     21 triggers
-    25 queries
+    26 queries
     20 views
-    12 functions
+    13 functions
     32 procedures
     4 users
     34 indexes

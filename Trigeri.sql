@@ -349,3 +349,25 @@ END IF;
 END//
 DELIMITER ;
 
+-- Triger koji će ograničiti da isti zaposlenik ne smije istovremeno voditi više od 5 aktivnih slučajeva kako ne bi bio preopterećen
+DELIMITER //
+
+CREATE TRIGGER Ogranicenje_broja_slucajeva
+BEFORE INSERT ON Slucaj
+FOR EACH ROW
+BEGIN
+    DECLARE broj_slucajeva INT;
+
+    SELECT COUNT(*)
+    INTO broj_slucajeva
+    FROM Slucaj
+    WHERE id_voditelj = NEW.id_voditelj AND status = 'Aktivan';
+
+    IF broj_slucajeva >= 5 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Zaposlenik ne može voditi više od 5 aktvnih slučajeva istovremeno kako ne bi bio preopterećen.';
+    END IF;
+END //
+
+
+

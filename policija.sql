@@ -2266,7 +2266,80 @@ DELIMITER ;
 # Napiši upit koji će dohvatiti sve osobe, pa i policajce; nije nemoguće da policajac bude kriminalac :) i podatke o njihovoj sumnjivosti
 SELECT id, ime_prezime, SumnjivostOsobe(id) AS sumnjivost
 FROM Osoba;
-	
+
+# Napiši funkciju koja će za dani odjel definiran id-jem koji joj prosljeđujemo za argument vratiti broj zaposlenih na tom odjelu u zadnjih 6 mjeseci
+DELIMITER //
+
+CREATE FUNCTION Broj_zaposlenih_6mj(odjel_id INT) 
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE broj_zaposlenih INT;
+
+    SELECT COUNT(*) INTO broj_zaposlenih
+    FROM Zaposlenik
+    WHERE id_odjel = odjel_id
+      AND datum_zaposlenja >= CURDATE() - INTERVAL 6 MONTH;
+
+    RETURN broj_zaposlenih;
+END //
+
+DELIMITER ;
+SELECT Broj_zaposlenih_6mj(5);
+
+# Napiši upit koji će vratiti id i naziv odjela koji je imao  najveći broj zaposlenih u zadnjih 6 mjeseci
+SELECT id, naziv, Broj_zaposlenih_6mj(id) AS Broj_zaposlenih
+FROM odjeli
+ORDER BY Broj_zaposlenih DESC
+LIMIT 1;
+
+# Napiši funkciju koja će za odjel definiran prosljeđenim id-jem dohvatiti broj zaposlenih i broj slučajeva. Zatim
+# će računati koliko prosječno ima slučajeva po osobi na tom odjelu
+DELIMITER //
+
+CREATE FUNCTION Avg_Slucaj_Osoba_Odjel(odjel_id INT) RETURNS DECIMAL(10, 2)
+DETERMINISTIC
+BEGIN
+    DECLARE broj_zaposlenih INT;
+    DECLARE broj_slucajeva INT;
+    DECLARE prosječan_broj_slucajeva DECIMAL(10, 2);
+
+
+    SELECT COUNT(*) INTO broj_zaposlenih
+    FROM Zaposlenik
+    WHERE id_odjel = odjel_id;
+
+
+    SELECT COUNT(*) INTO broj_slucajeva
+    FROM Slucaj
+    WHERE id_voditelj IN (SELECT id_osoba FROM Zaposlenik WHERE id_odjel = odjel_id);
+
+
+    IF broj_zaposlenih > 0 THEN
+        SET prosječan_broj_slucajeva = broj_slucajeva / broj_zaposlenih;
+    ELSE
+        SET prosjecan_broj_slučajeva = 0;
+    END IF;
+
+    RETURN prosjecan_broj_slučajeva;
+END //
+
+DELIMITER ;
+
+SELECT Avg_Slucaj_Osoba_Odjel(5);
+
+#Koristeći ovu funkciju napiši upit za pronalaženje odjela s ispodprosječnim brojem slučajeva po osobi
+SELECT naziv AS Nazivi_ispodprosječnih_odjela
+FROM Odjeli
+WHERE Avg_Slucaj_Osoba_Odjel(id) < 
+    (SELECT AVG(Avg_Slucaj_Osoba_Odjel(id)) FROM Odjeli);
+
+# Na isti način napiši i upit za pronalaženje odjela s iznadprosječnim brojem slučajeva po osobi
+-- Upit za pronalaženje odjela s ispodprosječnim brojem slučajeva po osobi
+SELECT id, naziv
+FROM Odjeli
+WHERE Avg_Slucaj_Osoba_Odjel(id) >
+    (SELECT AVG(Avg_Slucaj_Osoba_Odjel(id)) FROM Odjeli);
 ###############################################################################################################################################################
 # IDEJA; ZA INSERTANJE KORISTIMO TRANSAKCIJE U KOJIMA POZIVAMO PROCEDURE ZA INSERT U POJEDINE TABLICE
 # Ova transakcija dole je čisto ideja. Ovo uopće ne mora bit u projektu; nego me čisto zanimalo dali se to more napravit
@@ -2298,14 +2371,13 @@ CALL Dodaj_Novo_Kaznjivo_Djelo('Dijamantna pljačka', 'Oružana pljačka dragulj
 COMMIT;
 
 
-# triger koji zabranjuje da isti zaposlenik ima previše aktivnih slučajeva na kojima radi (prebrojava broj slučajeva uz uvjet da id_zaposlenik = zaposlenik.id i ima COUNT veći od 4)
 
 /* KILLCOUNT:
     18 tables
     21 triggers
-    26 queries
+    29 queries
     20 views
-    13 functions
+    15 functions
     32 procedures
     4 users
     34 indexes

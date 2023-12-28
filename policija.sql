@@ -2381,5 +2381,5 @@ COMMIT;
     32 procedures
     4 users
     34 indexes
-    1 event
+    2 events
 */

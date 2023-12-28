@@ -146,7 +146,6 @@ FOREIGN KEY (id_ostecenik) REFERENCES Osoba(id)
 );
 
 # U tablici slučaj, možemo indeksirati stupac početak da bismo brže pretraživali slučajeve po datumu početka
-CREATE INDEX idx_pocetak_slucaj ON Slucaj(pocetak);
 # Možemp indeksirati i sve strane ključeve kako bismo ubrzali pretragu po njima
 CREATE INDEX idx_pocetak_slucaj ON Slucaj(pocetak);
 CREATE INDEX idx_id_pocinitelj_slucaj ON Slucaj(id_pocinitelj);

@@ -295,46 +295,62 @@ DELIMITER ;
 # Napiši proceduru koja će svim zatvorenicima koji su još u zatvoru (datum odlaska iz zgrade zatvora im je NULL) dodati novi stupac sa brojem dana u zatvoru koji će dobiti tako da računa broj dana o dana dolaska u zgradu do današnjeg dana
 # Ubacit scheduled dnevno izvođenje procedure
 DELIMITER //
+
 CREATE PROCEDURE DodajBrojDanaUZatvoru()
 BEGIN
     
+    -- Dodaj stupac id_zgrada u tablicu Osoba ako već ne postoji
+    ALTER TABLE Osoba
+    ADD COLUMN id_zgrada INT;
+
+    -- Postavi done na 0
     DECLARE done INT DEFAULT 0;
     DECLARE osoba_id INT;
-    DECLARE datum_dolaska DATETIME;
+    DECLARE datum_zavrsetka_slucaja DATETIME;
     DECLARE danas DATETIME;
-    
+    DECLARE vrsta_zgrade VARCHAR(255);
+
+    -- Deklariraj kursor
     DECLARE cur CURSOR FOR
-    SELECT Id, Datum_dolaska_u_zgradu
-    FROM Osoba
-    WHERE Datum_odlaska_iz_zgrade IS NULL;
-    
+    SELECT O.Id, S.zavrsetak, Z.vrsta_zgrade, S.id_zgrada
+    FROM Osoba O
+    JOIN Slucaj S ON O.id = S.id_pocinitelj
+    JOIN Zgrada Z ON S.id_zgrada = Z.Id;
+
+    -- Postavi handler za kraj
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-    
+
+    -- Otvori kursor
     OPEN cur;
-    
+
     read_loop: LOOP
-        FETCH cur INTO osoba_id, datum_dolaska;
-        
+        FETCH cur INTO osoba_id, datum_zavrsetka_slucaja, vrsta_zgrade, osoba_id_zgrada;
+
         IF done = 1 THEN
             LEAVE read_loop;
         END IF;
-        
-       
-        SET danas = NOW();
-        SET @broj_dana_u_zatvoru = DATEDIFF(danas, datum_dolaska);
-        
-   
-        UPDATE Osoba
-        SET Broj_dana_u_zatvoru = @broj_dana_u_zatvoru
-        WHERE Id = osoba_id;
+
+        -- Dodajte provjeru vrste zgrade i provjeru je li datum zavrsetka_slucaja null
+        IF vrsta_zgrade = 'Zatvor' AND datum_zavrsetka_slucaja IS NOT NULL THEN
+            SET danas = NOW();
+            SET @broj_dana_u_zatvoru = DATEDIFF(danas, datum_zavrsetka_slucaja);
+
+            -- Ažuriraj stupac Broj_dana_u_zatvoru
+            UPDATE Osoba
+            SET Broj_dana_u_zatvoru = @broj_dana_u_zatvoru,
+                id_zgrada = osoba_id_zgrada
+            WHERE Id = osoba_id;
+        END IF;
     END LOOP;
-    
+
+    -- Zatvori kursor
     CLOSE cur;
-    
+
 END //
+
 DELIMITER ;
 
-# Napiši proceduru koja će omogućiti da pretražujemo slučajeve preko neke ključne riječi iz opisa
+    # Napiši proceduru koja će omogućiti da pretražujemo slučajeve preko neke ključne riječi iz opisa
 DELIMITER //
 CREATE PROCEDURE PretraziSlucajevePoOpisu(IN kljucnaRijec TEXT)
 BEGIN

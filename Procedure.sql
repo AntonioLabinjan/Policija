@@ -298,79 +298,26 @@ DELIMITER //
 
 CREATE PROCEDURE DodajBrojDanaUZatvoru()
 BEGIN
-    
-    -- Dodaj stupac id_zgrada u tablicu Osoba ako već ne postoji
-    ALTER TABLE Osoba
-    ADD COLUMN id_zgrada INT;
-    ALTER TABLE Osoba
-    ADD COLUMN Broj_dana_u_zatvoru INT;
-
-    -- Postavi done na 0
-    DECLARE done INT DEFAULT 0;
-    DECLARE osoba_id INT;
-    DECLARE datum_zavrsetka_slucaja DATETIME;
-    DECLARE danas DATETIME;
-    DECLARE vrsta_zgrade VARCHAR(255);
-
-    -- Deklariraj kursor
-    DECLARE cur CURSOR FOR
-    SELECT O.Id, S.zavrsetak, Z.vrsta_zgrade, S.id_zgrada
-    FROM Osoba O
-    JOIN Slucaj S ON O.id = S.id_pocinitelj
-    JOIN Zgrada Z ON S.id_zgrada = Z.Id;
-
-    -- Postavi handler za kraj
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-
-    -- Otvori kursor
-    OPEN cur;
-
-    read_loop: LOOP
-        FETCH cur INTO osoba_id, datum_zavrsetka_slucaja, vrsta_zgrade, osoba_id_zgrada;
-
-        IF done = 1 THEN
-            LEAVE read_loop;
-        END IF;
-
-        -- Dodajte provjeru vrste zgrade i provjeru je li datum zavrsetka_slucaja null
-        IF vrsta_zgrade = 'Zatvor' AND datum_zavrsetka_slucaja IS NOT NULL THEN
-            SET danas = NOW();
-            SET @broj_dana_u_zatvoru = DATEDIFF(danas, datum_zavrsetka_slucaja);
-
-            -- Ažuriraj stupac Broj_dana_u_zatvoru
-            UPDATE Osoba
-            SET Broj_dana_u_zatvoru = @broj_dana_u_zatvoru,
-                id_zgrada = osoba_id_zgrada
-            WHERE Id = osoba_id;
-        END IF;
-    END LOOP;
-
-    -- Zatvori kursor
-    CLOSE cur;
-
-END //
-
-DELIMITER ;
-
-DELIMITER //
-
-CREATE PROCEDURE DodajBrojDanaUZatvoru2()
-BEGIN
-    
-    -- Provjeri postojanje stupaca prije dodavanja
-    IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS
-                   WHERE TABLE_NAME = 'Osoba' AND COLUMN_NAME = 'id_zgrada') THEN
+    -- Provjerimo postojanje stupaca prije dodavanja(da ne dodajemo dva puta isti stupac)
+    IF NOT EXISTS (
+        SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = 'Osoba' AND COLUMN_NAME = 'id_zgrada'
+    ) THEN
+        -- Dodamo stupac id_zgrada u tablicu Osoba jer je poželjno da za osobu koja je u zatvoru znamo di se nalazi
         ALTER TABLE Osoba
         ADD COLUMN id_zgrada INT;
     END IF;
-
-    IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS
-                   WHERE TABLE_NAME = 'Osoba' AND COLUMN_NAME = 'Broj_dana_u_zatvoru') THEN
+    
+    IF NOT EXISTS (
+        SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = 'Osoba' AND COLUMN_NAME = 'Broj_dana_u_zatvoru'
+    ) THEN
+        -- Dodamo stupac Broj_dana_u_zatvoru u tablicu Osoba
         ALTER TABLE Osoba
         ADD COLUMN Broj_dana_u_zatvoru INT;
     END IF;
 
-    -- Postavi done na 0
+    -- Postavimo done na 0
     DECLARE done INT DEFAULT 0;
     DECLARE osoba_id INT;
     DECLARE datum_zavrsetka_slucaja DATETIME;
@@ -378,17 +325,17 @@ BEGIN
     DECLARE vrsta_zgrade VARCHAR(255);
     DECLARE osoba_id_zgrada INT;
 
-    -- Deklariraj kursor
+    -- Deklariramo kursor
     DECLARE cur CURSOR FOR
     SELECT O.Id, S.zavrsetak, Z.vrsta_zgrade, S.id_zgrada
     FROM Osoba O
     JOIN Slucaj S ON O.id = S.id_pocinitelj
     JOIN Zgrada Z ON S.id_zgrada = Z.Id;
 
-    -- Postavi handler za kraj
+    -- Postavimo handler za kraj
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-    -- Otvori kursor
+    -- Otvorimo kursor
     OPEN cur;
 
     read_loop: LOOP
@@ -398,12 +345,12 @@ BEGIN
             LEAVE read_loop;
         END IF;
 
-        -- Dodajte provjeru vrste zgrade i provjeru je li datum zavrsetka_slucaja null
-        IF vrsta_zgrade = 'Zatvor' AND datum_zavrsetka_slucaja IS NOT NULL THEN
+        -- Dodamo provjeru vrste zgrade i provjeru je li datum zavrsetka_slucaja null
+        IF vrsta_zgrade = 'Zatvor' AND datum_zavrsetka_slucaja IS NOT NULL THEN -- ako datum završetka nije NULL, znači da je gotov slučaj
             SET danas = NOW();
             SET @broj_dana_u_zatvoru = DATEDIFF(danas, datum_zavrsetka_slucaja);
 
-            -- Ažuriraj stupac Broj_dana_u_zatvoru
+            -- Ažuriramo stupac Broj_dana_u_zatvoru
             UPDATE Osoba
             SET Broj_dana_u_zatvoru = @broj_dana_u_zatvoru,
                 id_zgrada = osoba_id_zgrada
@@ -411,13 +358,12 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- Zatvori kursor
+    -- Zatvorimo kursor
     CLOSE cur;
 
 END //
 
 DELIMITER ;
-
 
     # Napiši proceduru koja će omogućiti da pretražujemo slučajeve preko neke ključne riječi iz opisa
 DELIMITER //
@@ -618,7 +564,6 @@ BEGIN
         IF slucaj_id IS NULL THEN
             LEAVE slucaj_loop;
         END IF;
-        -- Ovdje možeš raditi s podacima
         SELECT slucaj_naziv, zapljena_vrijednost;
     END LOOP;
 

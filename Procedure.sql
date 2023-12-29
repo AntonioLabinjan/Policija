@@ -352,6 +352,73 @@ END //
 
 DELIMITER ;
 
+DELIMITER //
+
+CREATE PROCEDURE DodajBrojDanaUZatvoru2()
+BEGIN
+    
+    -- Provjeri postojanje stupaca prije dodavanja
+    IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+                   WHERE TABLE_NAME = 'Osoba' AND COLUMN_NAME = 'id_zgrada') THEN
+        ALTER TABLE Osoba
+        ADD COLUMN id_zgrada INT;
+    END IF;
+
+    IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+                   WHERE TABLE_NAME = 'Osoba' AND COLUMN_NAME = 'Broj_dana_u_zatvoru') THEN
+        ALTER TABLE Osoba
+        ADD COLUMN Broj_dana_u_zatvoru INT;
+    END IF;
+
+    -- Postavi done na 0
+    DECLARE done INT DEFAULT 0;
+    DECLARE osoba_id INT;
+    DECLARE datum_zavrsetka_slucaja DATETIME;
+    DECLARE danas DATETIME;
+    DECLARE vrsta_zgrade VARCHAR(255);
+    DECLARE osoba_id_zgrada INT;
+
+    -- Deklariraj kursor
+    DECLARE cur CURSOR FOR
+    SELECT O.Id, S.zavrsetak, Z.vrsta_zgrade, S.id_zgrada
+    FROM Osoba O
+    JOIN Slucaj S ON O.id = S.id_pocinitelj
+    JOIN Zgrada Z ON S.id_zgrada = Z.Id;
+
+    -- Postavi handler za kraj
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    -- Otvori kursor
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO osoba_id, datum_zavrsetka_slucaja, vrsta_zgrade, osoba_id_zgrada;
+
+        IF done = 1 THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Dodajte provjeru vrste zgrade i provjeru je li datum zavrsetka_slucaja null
+        IF vrsta_zgrade = 'Zatvor' AND datum_zavrsetka_slucaja IS NOT NULL THEN
+            SET danas = NOW();
+            SET @broj_dana_u_zatvoru = DATEDIFF(danas, datum_zavrsetka_slucaja);
+
+            -- Ažuriraj stupac Broj_dana_u_zatvoru
+            UPDATE Osoba
+            SET Broj_dana_u_zatvoru = @broj_dana_u_zatvoru,
+                id_zgrada = osoba_id_zgrada
+            WHERE Id = osoba_id;
+        END IF;
+    END LOOP;
+
+    -- Zatvori kursor
+    CLOSE cur;
+
+END //
+
+DELIMITER ;
+
+
     # Napiši proceduru koja će omogućiti da pretražujemo slučajeve preko neke ključne riječi iz opisa
 DELIMITER //
 CREATE PROCEDURE PretraziSlucajevePoOpisu(IN kljucnaRijec TEXT)

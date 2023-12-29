@@ -302,6 +302,8 @@ BEGIN
     -- Dodaj stupac id_zgrada u tablicu Osoba ako već ne postoji
     ALTER TABLE Osoba
     ADD COLUMN id_zgrada INT;
+    ALTER TABLE Osoba
+    ADD COLUMN Broj_dana_u_zatvoru INT;
 
     -- Postavi done na 0
     DECLARE done INT DEFAULT 0;

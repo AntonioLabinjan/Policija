@@ -365,6 +365,17 @@ END //
 
 DELIMITER ;
 
+DELIMITER //
+
+CREATE EVENT IF NOT EXISTS `BrojDanaUZatvoruEvent`
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    CALL DodajBrojDanaUZatvoru();
+END //
+
+DELIMITER ;
+
     # Napiši proceduru koja će omogućiti da pretražujemo slučajeve preko neke ključne riječi iz opisa
 DELIMITER //
 CREATE PROCEDURE PretraziSlucajevePoOpisu(IN kljucnaRijec TEXT)
@@ -700,6 +711,85 @@ BEGIN
         SET id_radno_mjesto = novo_radno_mjesto_id_param
         WHERE id_osoba = p_id_osoba;
     END IF;
+END //
+
+DELIMITER ;
+
+# Napravi proceduru koja će provjeravati je li zatvorska kazna istekla
+DELIMITER //
+
+CREATE PROCEDURE ProvjeriIstekZatvorskeKazne()
+BEGIN
+    -- Provjerimo postojanje stupca prije dodavanja
+    IF NOT EXISTS (
+        SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = 'Osoba' AND COLUMN_NAME = 'obavijest'
+    ) THEN
+        -- Dodamo stupac obavijest u tablicu Osoba
+        ALTER TABLE Osoba
+        ADD COLUMN obavijest VARCHAR(50);
+    END IF;
+
+    -- Postavimo done na 0
+    DECLARE done INT DEFAULT 0;
+    DECLARE osoba_id INT;
+    DECLARE datum_zavrsetka_slucaja DATETIME;
+    DECLARE ukupna_kazna INT;
+    DECLARE danas DATETIME;
+
+    -- Deklariramo kursor
+    DECLARE cur CURSOR FOR
+    SELECT O.Id, S.zavrsetak
+    FROM Osoba O
+    JOIN Slucaj S ON O.id = S.id_pocinitelj
+    WHERE S.status = 'Zavrsen';
+
+    -- Postavimo handler za kraj
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    -- Otvorimo kursor
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO osoba_id, datum_zavrsetka_slucaja;
+
+        IF done = 1 THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Izračunamo ukupnu kaznu za osobu
+        SET ukupna_kazna = (
+            SELECT SUM(K.predvidena_kazna)
+            FROM Slucaj S
+            JOIN Kaznjiva_djela_u_slucaju KS ON S.id = KS.id_slucaj
+            JOIN Kaznjiva_djela K ON KS.id_kaznjivo_djelo = K.id
+            WHERE S.id_pocinitelj = osoba_id
+        );
+
+        -- Provjermo je li datum zavrsetka_slucaja + ukupna_kazna manji od današnjeg datuma
+        SET danas = NOW();
+        IF DATE_ADD(datum_zavrsetka_slucaja, INTERVAL ukupna_kazna DAY) <= danas THEN
+            -- Istekla je zatvorska kazna, dodaj obavijest u stupac obavijest u tablici Osoba
+            UPDATE Osoba
+            SET obavijest = 'Kazna je istekla'
+            WHERE Id = osoba_id;
+        END IF;
+    END LOOP;
+
+    -- Zatvorimo kursor
+    CLOSE cur;
+
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE EVENT IF NOT EXISTS `ProvjeraIstekaKazniEvent`
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    CALL ProvjeriIstekZatvorskeKazne();
 END //
 
 DELIMITER ;

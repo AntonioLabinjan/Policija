@@ -58,10 +58,10 @@ Kaznjiva_djela_u_slucaju.id_kaznjivo_djelo= Kaznjiva_djela.id
 WHERE Slucaj.Status = 'Aktivan';
 
 # Izračunajmo iznos zapljene za svaki pojedini slučaj
-SELECT Slucaj.Naziv, SUM(Zapljene.Vrijednost) AS UkupnaVrijednostZapljena
+SELECT Slucaj.ID, Slucaj.Naziv, SUM(Zapljene.Vrijednost) AS UkupnaVrijednostZapljena
 FROM Slucaj
 LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.id_slucaj
-GROUP BY Slucaj.ID;
+GROUP BY Slucaj.ID, Slucaj.Naziv;
 
 # Pronađi prosječnu vrijednost zapljene za pojedina kaznena djela
 SELECT K.Naziv AS VrstaKaznenogDjela, AVG(Z.Vrijednost) AS ProsječnaVrijednostZapljene

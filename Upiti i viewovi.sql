@@ -380,6 +380,16 @@ JOIN Evidencija_Dogadaja ED ON KS.id_slucaj = ED.id_slucaj;
 
 SELECT * FROM Kaznjiva_Djela_Na_Mjestu WHERE ED.id_mjesto = 1;
 
+# Napravi pogled koji će dohvatiti sve osobe, slučajeve koje su počinili i KD u njima
+CREATE VIEW Osobe_i_KD AS
+SELECT DISTINCT O.Ime_Prezime
+FROM Osoba O
+JOIN Slucaj S ON O.Id = S.id_pocinitelj
+JOIN Kaznjiva_djela_u_slucaju KD ON S.Id = KD.id_slucaj
+JOIN Kaznjiva_djela K ON KD.id_kaznjivo_djelo = K.id
+
+
+
 # Napravi pogled koji će ispisati sve slučajeve i evidentirane događaje za osobe.
 # Podaci će se zatim moći filtrirati (npr. po imenu i prezimenu)
 # Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)

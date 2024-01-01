@@ -64,13 +64,7 @@ FROM Slucaj
 LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.id_slucaj
 GROUP BY Slucaj.ID;
 
-# OVO MOREMO UBACIT U POGLED
-# Nađimo sva kažnjiva djela koja su se dogodila ne nekom mjestu (mijenjamo id_mjesto_pronalaska)
-SELECT K.Naziv, K.Opis
-FROM Kaznjiva_Djela_u_Slucaju KS
-JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo= K.ID
-JOIN Evidencija_Dogadaja ED ON KS.id_slucaj= ED.id_slucaj
-WHERE ED.id_mjesto=1;
+
 
 # Nađimo  sve događaje koji uključuju pojedino kažnjivo djelo
 SELECT E.Opis_Dogadaja, E.Datum_Vrijeme
@@ -359,3 +353,15 @@ SELECT *
 FROM osoba_prometna_nesreca
 ORDER BY broj_prometnih_nesreca DESC
 LIMIT 1;
+
+
+# Napravi pogled koji će pronaći sva kažnjiva djela koja su se događala u slučajevima
+# Zatim napravi upit kojim ćemo moći pronalaziti kažnjiva djela za određeno mjesto po id-ju
+CREATE VIEW Kaznjiva_Djela_Na_Mjestu AS
+SELECT K.Naziv, K.Opis
+FROM Kaznjiva_Djela_u_Slucaju KS
+JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo = K.ID
+JOIN Evidencija_Dogadaja ED ON KS.id_slucaj = ED.id_slucaj
+
+SELECT * FROM Kaznjiva_Djela_Na_Mjestu WHERE ED.id_mjesto = 1
+

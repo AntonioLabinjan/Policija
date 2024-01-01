@@ -142,7 +142,6 @@ GROUP BY M.Id, M.Naziv;
 
 
 # POGLEDI
-# Materijalizirani pogled (privremena tablica)
 # Ako je uz osumnjičenika povezano vozilo, onda se stvara materijalizirani pogled koji prati sve osumnjičenike i njihova vozila
 CREATE VIEW osumnjicenici_vozila AS
 SELECT

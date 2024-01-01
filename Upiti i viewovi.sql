@@ -4,25 +4,22 @@
  
 -- Ispiši prosječan broj godina osoba koje su prijavile digitalno nasilje. 
 
-SELECT AVG(YEAR(NOW())-YEAR(osoba.datum_rodenja)) AS prosjecan_broj_godina
+
+SELECT AVG(YEAR(slucaj.pocetak)-YEAR(osoba.datum_rodenja)) AS prosjecan_broj_godina
 FROM slucaj INNER JOIN osoba ON slucaj.id_izvjestitelj=osoba.id
 WHERE slucaj.naziv LIKE '%digitalno nasilje%';
 
 -- Prikaži osobu čiji je nestanak posljednji prijavljen
 
 SELECT osoba.*
-FROM osoba
-INNER JOIN slucaj ON osoba.id = slucaj.id_ostecenik
-WHERE slucaj.naziv LIKE '%nestanak%'
-ORDER BY slucaj.pocetak DESC
+FROM osoba INNER JOIN slucaj ON osoba.id=slucaj.id_ostecenik
+ORDER BY pocetak DESC
 LIMIT 1;
-
-
 
 -- Prikaži najčešću vrstu kažnjivog djela
 
 SELECT kaznjiva_djela.*
-FROM kaznjiva_djela  KD INNER JOIN kaznjiva_djela_u_slucaju  KS ON KS.id_kaznjivo_djelo = KD.id
+FROM kaznjiva_djela INNER JOIN kaznjiva_djela_u_slucaju
 GROUP BY kaznjiva_djela.id
 ORDER BY COUNT(*)
 LIMIT 1;
@@ -35,7 +32,20 @@ JOIN Osoba O ON Z.id_osoba = O.Id
 JOIN Slucaj S ON Z.Id = S.id_voditelj;
 
 
+# Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
+SELECT O.Ime_Prezime, S.Naziv AS 'Naziv slučaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto
+FROM Slucaj S
+JOIN Evidencija_dogadaja ED ON S.Id = ED.id_slucaj
+JOIN Osoba O ON O.Id = S.id_pocinitelj
+WHERE O.Ime_Prezime = 'Ime Prezime';
 
+# Ispišimo sve osobe koje su osumnjičene za određeno KD
+SELECT DISTINCT O.Ime_Prezime
+FROM Osoba O
+JOIN Slucaj S ON O.Id = S.id_pocinitelj
+JOIN Kaznjiva_djela_u_slucaju	KD ON S.Id = KD.id_slucaj
+JOIN Kaznjiva_djela	K ON KD.id_kaznjivo_djelo = K.id
+WHERE K.Naziv = 'Naziv kaznenog djela';
 
 # Pronađimo sve slučajeve koji sadrže KD i nisu riješeni
 SELECT Slucaj.Naziv, Kaznjiva_djela.Naziv AS KaznjivoDjelo
@@ -50,9 +60,6 @@ SELECT Slucaj.Naziv, SUM(Zapljene.Vrijednost) AS UkupnaVrijednostZapljena
 FROM Slucaj
 LEFT JOIN Zapljene ON Slucaj.ID = Zapljene.id_slucaj
 GROUP BY Slucaj.ID;
-
-
-
 
 # Pronađi prosječnu vrijednost zapljene za pojedina kaznena djela
 SELECT K.Naziv AS VrstaKaznenogDjela, AVG(Z.Vrijednost) AS ProsječnaVrijednostZapljene
@@ -88,6 +95,25 @@ GROUP BY O.Id, O.Ime_Prezime
 ORDER BY Ukupna_kazna DESC
 LIMIT 1;
 
+# Prikaži sva vozila i u koliko slučajeva su se oni upisali
+SELECT vozilo.*, COUNT(Slucaj.id) AS broj_slucajeva
+FROM Vozilo LEFT OUTER JOIN Osoba ON Vozilo.id_vlasnik = Osoba.id
+INNER JOIN Slucaj ON Osoba.id = Slucaj.id_pocinitelj
+GROUP BY Vozilo.id;
+
+# Mjesto s najviše slučajeva
+SELECT Mjesto.*, COUNT(Evidencija_dogadaja.id) AS kol_slucajeva
+FROM Mjesto INNER JOIN Evidencija_dogadaja ON  Mjesto.id = Evidencija_dogadaja.id_mjesto
+GROUP BY Mjesto.id 
+ORDER BY kol_slucajeva DESC 
+LIMIT 1;
+
+# Mjesto s najmanje slučajeva
+SELECT Mjesto.*, COUNT(Evidencija_dogadaja.id) AS kol_slucajeva
+FROM Mjesto INNER JOIN Evidencija_dogadaja ON  Mjesto.id = Evidencija_dogadaja.id_mjesto
+GROUP BY Mjesto.id 
+ORDER BY kol_slucajeva ASC 
+LIMIT 1;
 # Pronađi policijskog službenika koji je vodio najviše slučajeva
 SELECT
     z.Id AS Zaposlenik_Id,
@@ -114,8 +140,6 @@ LEFT JOIN Slucaj S ON ED.id_slucaj= S.Id
 LEFT JOIN Kaznjiva_Djela_u_Slucaju KDS ON S.Id = KDS.id_slucaj
 WHERE KDS.id_slucaj IS NULL OR KDS.id_kaznjivo_djelo IS NULL
 GROUP BY M.Id, M.Naziv;
-
-
 # POGLEDI
 # Ako je uz osumnjičenika povezano vozilo, onda se stvara materijalizirani pogled koji prati sve osumnjičenike i njihova vozila
 CREATE VIEW osumnjicenici_vozila AS

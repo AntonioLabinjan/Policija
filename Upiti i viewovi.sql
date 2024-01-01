@@ -35,20 +35,7 @@ JOIN Osoba O ON Z.id_osoba = O.Id
 JOIN Slucaj S ON Z.Id = S.id_voditelj;
 
 
-# Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
-SELECT S.Naziv AS 'Naziv slučaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto
-FROM Slucaj S
-JOIN Evidencija_dogadaja ED ON S.Id = ED.id_slucaj
-JOIN Osoba O ON O.Id = S.id_pocinitelj
-WHERE O.Ime_Prezime = 'Ime Prezime';
 
-# Ispišimo sve osobe koje su osumnjičene za određeno KD
-SELECT DISTINCT O.Ime_Prezime
-FROM Osoba O
-JOIN Slucaj S ON O.Id = S.id_pocinitelj
-JOIN Kaznjiva_djela_u_slucaju	KD ON S.Id = KD.id_slucaj
-JOIN Kaznjiva_djela	K ON KD.id_kaznjivo_djelo = K.id
-WHERE K.Naziv = 'Naziv kaznenog djela';
 
 # Pronađimo sve slučajeve koji sadrže KD i nisu riješeni
 SELECT Slucaj.Naziv, Kaznjiva_djela.Naziv AS KaznjivoDjelo
@@ -66,12 +53,6 @@ GROUP BY Slucaj.ID;
 
 
 
-# Nađimo  sve događaje koji uključuju pojedino kažnjivo djelo
-SELECT E.Opis_Dogadaja, E.Datum_Vrijeme
-FROM Evidencija_Dogadaja E
-JOIN Slucaj S ON E.id_slucaj = S.Id
-JOIN Kaznjiva_Djela_u_Slucaju KS ON S.Id = KS.id_slucaj
-WHERE KS.id_kaznjivo_djelo = 1; # ovo moremo izmjenit
 
 # Pronađi prosječnu vrijednost zapljene za pojedina kaznena djela
 SELECT K.Naziv AS VrstaKaznenogDjela, AVG(Z.Vrijednost) AS ProsječnaVrijednostZapljene
@@ -296,6 +277,14 @@ SELECT
 FROM Osoba o
 INNER JOIN Zaposlenik z ON o.Id = z.id_osoba;
 
+# Napravi pogled koji će dohvaćati sve osumnjičenike, zajedno s kažnjivim djelima za koja su osumnjičeni
+CREATE VIEW Pogled_Osumnjicene_Osobe_KD AS
+SELECT DISTINCT O.Ime_Prezime, K.Naziv AS 'Naziv kaznenog djela'
+FROM Osoba O
+JOIN Slucaj S ON O.Id = S.id_pocinitelj
+JOIN Kaznjiva_djela_u_slucaju KD ON S.Id = KD.id_slucaj
+JOIN Kaznjiva_djela K ON KD.id_kaznjivo_djelo = K.id;
+
 # Napravi pogled koji će izlistati sve pse i broj slučajeva na kojima je svaki od njih radio. U poseban stupac dodaj broj riješenih slučajeva od onih na kojima su radili. Zatim izračunaj postotak rješenosti slučajeva za svakog psa i to dodaj u novi stupac
 CREATE VIEW Pregled_Pasa AS
 SELECT
@@ -361,7 +350,28 @@ CREATE VIEW Kaznjiva_Djela_Na_Mjestu AS
 SELECT K.Naziv, K.Opis
 FROM Kaznjiva_Djela_u_Slucaju KS
 JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo = K.ID
-JOIN Evidencija_Dogadaja ED ON KS.id_slucaj = ED.id_slucaj
+JOIN Evidencija_Dogadaja ED ON KS.id_slucaj = ED.id_slucaj;
 
-SELECT * FROM Kaznjiva_Djela_Na_Mjestu WHERE ED.id_mjesto = 1
+SELECT * FROM Kaznjiva_Djela_Na_Mjestu WHERE ED.id_mjesto = 1;
 
+# Napravi pogled koji će ispisati sve slučajeve i evidentirane događaje za osobe.
+# Podaci će se zatim moći filtrirati (npr. po imenu i prezimenu)
+# Ispišimo slučajeve i evidencije za određenu osobu (osumnjičenika)
+
+CREATE VIEW SD_osoba AS
+SELECT S.Naziv AS 'Naziv slučaja', ED.opis_dogadaja, ED.datum_vrijeme, ED.id_mjesto, O.Ime_Prezime
+FROM Slucaj S
+JOIN Evidencija_dogadaja ED ON S.Id = ED.id_slucaj
+JOIN Osoba O ON O.Id = S.id_pocinitelj;
+
+SELECT * FROM SD_osoba WHERE O.Ime_Prezime = 'Pero Perić';
+
+# Napravi pogled koji će dohvaćati sve događaje koji su vezani za slučajeve koji sadrže određeno kažnjivo djelo
+CREATE VIEW Dogadaji_KD AS
+SELECT E.Opis_Dogadaja, E.Datum_Vrijeme, K.Naziv AS 'Naziv kaznjivog djela'
+FROM Evidencija_Dogadaja E
+JOIN Slucaj S ON E.id_slucaj = S.Id
+JOIN Kaznjiva_Djela_u_Slucaju KS ON S.Id = KS.id_slucaj
+JOIN Kaznjiva_Djela K ON KS.id_kaznjivo_djelo = K.Id;
+
+SELECT * FROM Dogadaji_KD WHERE 'Naziv kaznjivog djela' = 'Ubojstvo'

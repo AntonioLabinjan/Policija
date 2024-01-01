@@ -62,7 +62,6 @@ FROM Osoba
 WHERE Osoba.id NOT IN(SELECT id_osoba FROM Zaposlenik);
 
 
-# NAPIŠI SQL FUNKCIJU KOJA ĆE SLUŽITI ZA UNAPRIJEĐENJE POLICIJSKIH SLUŽBENIKA. Za argument će primati id osobe koju unaprijeđujemo i id novog radnog mjesta na koje je unaprijeđujemo. Taj će novi radno_mjesto_id zamjeniti stari. Također će provjeravati je li slučajno novi radno_mjesto_id jednak radno_mjesto_id-ju osobe koja je nadređena osobi koju unaprijeđujemo. Ako jest, postavit ćemo nadređeni_id na NULL zato što nam ne može biti nadređena osoba ista po činu
 SET SQL_safe_updates = 0;
 # Napiši funkciju koja će za određeni predmet vratiti slučaj u kojem je taj predmet dokaz i osobu koja je u tom slučaju osumnjičena
 DELIMITER //
@@ -216,6 +215,7 @@ BEGIN
 END //
 DELIMITER ;
 
+# Napravi funkciju koje će za slučej predan preko id-ja dohvatiti broj kažnjivih djela u njemu
 DELIMITER //
 
 CREATE FUNCTION Broj_Kaznjivih_Djela_U_Slucaju(id_slucaj INT) RETURNS INT
@@ -302,6 +302,14 @@ END;
 //
 DELIMITER ;
 
+# Napiši upit koji će dohvatiti sve slučajeve i pomoću funkcije iščitati njihove statuse i trajanja
+    SELECT 
+    Id AS 'ID slučaja',
+    Naziv AS 'Naziv slučaja',
+    Informacije_o_slucaju(Id) AS 'Informacije o slučaju'
+FROM 
+    Slucaj;
+
 -- Napiši funckiju koja će za zaposlenika definiranog parametron p_id_zaposlenik izbrojiti broj slučajeva na kojima je on bio voditelj i izračunati 
 -- postotak rješenosti tih slučajeva te na temelju toga ispiše je li zaposlenik neuspješan (0%-49%) ili uspješan (50%-100%).
 
@@ -332,6 +340,18 @@ END IF;
 END//
 DELIMITER ;
 
+# upit koji će za svakog zaposlenika pozvati funkciju uspješnosti i vratiti rezultat, osim ako nije vodio slučajeve, onda će vratiti odgovarajuću obavijest
+    SELECT
+    Z.Id AS 'ID zaposlenika',
+    Z.Ime_Prezime AS 'Ime i prezime zaposlenika',
+    CASE
+        WHEN (SELECT COUNT(*) FROM slucaj WHERE id_voditelj = Z.Id) > 0
+        THEN zaposlenik_slucaj(Z.Id)
+        ELSE 'Zaposlenik nije vodio slučajeve'
+    END AS 'Uspješnost'
+FROM
+    Zaposlenik Z;
+
 -- Napiši funkciju koja će za osobu definiranu parametrom p_id_osoba vratiti "DA" ako je barem jednom bila oštećenik u nekom slučaju, a u 
 -- protivnom će vratiti "NE."
 
@@ -352,6 +372,18 @@ END IF;
 
 END//
 DELIMITER ;
+# Prikaži sve osobe koje su oštećene više od 3 puta
+    SELECT
+    O.Id AS 'ID osobe',
+    O.Ime_Prezime AS 'Ime i prezime osobe'
+FROM
+    Osoba O
+WHERE
+    osoba_ostecenik(O.Id) = 'DA'
+GROUP BY
+    O.Id, O.Ime_Prezime
+HAVING
+    COUNT(*) > 3;
 
 # Napiši funkciju koja će za osobu određenu predanim id_jem odrediti sve uloge koje je ta osoba imala u slučajevima
 DELIMITER //

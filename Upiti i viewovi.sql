@@ -13,7 +13,8 @@ WHERE slucaj.naziv LIKE '%digitalno nasilje%';
 
 SELECT osoba.*
 FROM osoba INNER JOIN slucaj ON osoba.id=slucaj.id_ostecenik
-ORDER BY pocetak DESC
+WHERE slucaj.naziv LIKE '%nestanak%'
+ORDER BY slucaj.pocetak DESC
 LIMIT 1;
 
 -- Prikaži najčešću vrstu kažnjivog djela

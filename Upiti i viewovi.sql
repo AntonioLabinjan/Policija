@@ -20,7 +20,7 @@ LIMIT 1;
 -- Prikaži najčešću vrstu kažnjivog djela
 
 SELECT kaznjiva_djela.*
-FROM kaznjiva_djela KD INNER JOIN kaznjiva_djela_u_slucaju KS
+FROM kaznjiva_djela KD INNER JOIN kaznjiva_djela_u_slucaju KS 
 ON KS.id_kaznjivo_djelo = KD.id
 GROUP BY kaznjiva_djela.id
 ORDER BY COUNT(*)

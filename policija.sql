@@ -2728,7 +2728,7 @@ WHERE Avg_Slucaj_Osoba_Odjel(id) >
     (SELECT AVG(Avg_Slucaj_Osoba_Odjel(id)) FROM Odjeli);
 ###############################################################################################################################################################
 # IDEJA; ZA INSERTANJE KORISTIMO TRANSAKCIJE U KOJIMA POZIVAMO PROCEDURE ZA INSERT U POJEDINE TABLICE
-# Ova transakcija dole je čisto ideja. Ovo uopće ne mora bit u projektu; nego me čisto zanimalo dali se to more napravit
+# Napravi transakciju koja će pomoću procedure kreirati 20 novih kažnjivih djela
 SET SESSION TRANSACTION ISOLATION LEVEL 
 READ COMMITTED;
 START TRANSACTION;

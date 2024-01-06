@@ -1,5 +1,3 @@
--- Potpune tablice 12/18 8-vozilo, 10-kaznjiva djela
--- 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 17., 
 
 
 -- Tablica Područje uprave(1)
@@ -139,7 +137,7 @@ INSERT INTO Radno_mjesto(vrsta, dodatne_informacije) VALUES
 ('HR zaposlenik', 'Osoba koja radi u odjelu ljudskih resursa (HR). Njihove odgovornosti uključuju regrutiranje, upravljanje osobljem, rješavanje problema zaposlenika te praćenje i primjenu politika tvrtke.'),
 ('Računovođa', 'Računovođa je stručnjak za financije i računovodstvo. Njihova uloga obuhvaća praćenje financijskih transakcija, sastavljanje financijskih izvještaja, pridržavanje poreznih propisa i pružanje financijskih savjeta.');
 
--- Tablica Odjeli(5) (tip podatka za opis odjela)
+-- Tablica Odjeli(5) 
 INSERT INTO Odjeli (naziv, opis) VALUES
 ('Gradska policija', 'Ovi odjeli se bave policijskim poslovima na lokalnoj razini i brinu se za sigurnost građana unutar gradova ili općina.'),
 ('Prometna policija', 'Ova policijska jedinica nadležna je za kontrolu prometa i sigurnost na cestama, uključujući regulaciju prometa, izdavanje kazni za prekršaje i istraživanje prometnih nesreća.'),
@@ -213,35 +211,35 @@ INSERT INTO Osoba(Ime_Prezime, Datum_rodjenja, Spol, Adresa, Telefon, Email) VAL
 -- Tablica Zaposlenik(7)
 INSERT INTO Zaposlenik(datum_zaposlenja, datum_izlaska_iz_sluzbe, id_nadređeni, id_radno_mjesto, id_odjel, id_zgrada, id_osoba) VALUES
 -- voditelji policijskih postaja
-(STR_TO_DATE('21.11.1995.', '%d.%m.%Y.', NULL, NULL, 5, 1, 1, 4),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, NULL, 5, 1, 36, 12),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, NULL, 5, 1, 4, 16),
+(STR_TO_DATE('21.11.1995.', '%d.%m.%Y.'), NULL, NULL, 5, 1, 1, 4),
+(STR_TO_DATE('05.10.2000.', '%d.%m.%Y.'), NULL, NULL, 5, 1, 36, 12),
+(STR_TO_DATE('18.09.1999.', '%d.%m.%Y.'), NULL, NULL, 5, 1, 4, 16),
 -- voditelj zatvora, voditelj pritvora
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.', NULL, NULL, 8, NULL, 43, 14),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.', NULL, NULL, 7, NULL, 37, 15),
+(STR_TO_DATE('17.06.2005.', '%d.%m.%Y.'), NULL, NULL, 8, NULL, 43, 14),
+(STR_TO_DATE('21.07.2000.', '%d.%m.%Y.'), NULL, NULL, 7, NULL, 37, 15),
 -- zaposlenici policijskih postaja
 (STR_TO_DATE('10.01.2009.', '%d.%m.%Y.'), NULL, 1, 4, 3, 1, 1), 
 (STR_TO_DATE('25.03.2012.', '%d.%m.%Y.'), NULL, 1, 3, 7, 1, 2),
-(STR_TO_DATE('15.08.1987.', '%d.%m.%Y.'), STR_TO_DATE('05.05.2005.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 3),
+(STR_TO_DATE('15.08.1988.', '%d.%m.%Y.'), STR_TO_DATE('05.05.2005.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 3),
 (STR_TO_DATE('17.02.2004.', '%d.%m.%Y.'), NULL, 2, 4, 3, 36, 5),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 9, 2, 3, 36, 6),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 2, 1, 2, 36, 7),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 3, 4, 9, 4, 8),
+(STR_TO_DATE('12.12.2010.', '%d.%m.%Y.'), NULL, 9, 2, 3, 36, 6),
+(STR_TO_DATE('22.02.2022.', '%d.%m.%Y.'), NULL, 2, 1, 2, 36, 7),
+(STR_TO_DATE('28.04.2023.', '%d.%m.%Y.'), NULL, 3, 4, 9, 4, 8),
 (STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 3, 4, 7, 4, 9),
-(STR_TO_DATE('10.11.1977.', '%d.%m.%Y.', STR_TO_DATE('01.06.2022.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 10),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.', NULL, 13, 2, 7, 4, 11),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.', NULL, 2, 3, 1, 36, 13),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), (STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 17),
+(STR_TO_DATE('10.11.1977.', '%d.%m.%Y.'), STR_TO_DATE('01.06.2022.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 10),
+(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 13, 2, 7, 4, 11),
+(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 2, 3, 1, 36, 13),
+(STR_TO_DATE('11.09.2001.', '%d.%m.%Y.'), (STR_TO_DATE('27.07.2017.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 17),
 -- zaštitari u pritvorima ili zatvorima
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.', NULL, 4, 6, NULL, 43, 18),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.', NULL, 5, 6, NULL, 37, 19),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.', NULL, 4, 6, NULL, 43, 20),
+(STR_TO_DATE('15.02.2023.', '%d.%m.%Y.'), NULL, 4, 6, NULL, 43, 18),
+(STR_TO_DATE('21.07.2015.', '%d.%m.%Y.'), NULL, 5, 6, NULL, 37, 19),
+(STR_TO_DATE('18.08.2021.', '%d.%m.%Y.'), NULL, 4, 6, NULL, 43, 20),
 -- administrativni zaposlenici
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 1, 8, NULL, 1, 21),
+(STR_TO_DATE('23.04.2002.', '%d.%m.%Y.'), NULL, 1, 8, NULL, 1, 21),
 (STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 2, 9, NULL, 36, 22),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), (STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 23),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 1, 8, NULL, 1, 24),
-(STR_TO_DATE('05.05.1985.', '%d.%m.%Y.'), NULL, 1, 9, NULL, 1, 25);
+(STR_TO_DATE('29.10.1990.', '%d.%m.%Y.'), STR_TO_DATE('15.09.2021.', '%d.%m.%Y.'), NULL, NULL, NULL, NULL, 23),
+(STR_TO_DATE('05.07.1995.', '%d.%m.%Y.'), NULL, 1, 8, NULL, 1, 24),
+(STR_TO_DATE('11.03.2000.', '%d.%m.%Y.'), NULL, 1, 9, NULL, 1, 25);
 
 -- Tablica Vozilo(8)
 INSERT INTO Vozilo(Marka, Model, Registracija, Godina_proizvodnje, Službeno_vozilo, Vlasnik_id) VALUES
@@ -270,16 +268,19 @@ INSERT INTO Predmet(naziv, id_mjesto_pronalaska) VALUES
 ('Puška', '1'),
 ('Novac u vrijednosti od 5000 eura', '4'),
 ('Mač', '1'),
+
 ('Nož', '36'),
 ('Nož', '4'),
 ('Pištolj', '33'),
 ('Razbijena boca', '28'),
 ('Mobitel', '36'),
+
 ('Osobna iskaznica', '1'),
 ('Novčanik', '36'),
 ('Pištolj', '28'),
 ('Pištolj', '34'),
 ('Novac u vrijednosti od 10000 eura', '28');
+
 -- Tablica Kaznjiva djela(10)
 -- ovisno o ozbiljnosti slučaja kazne će biti različite, no zbog jednostavnosti smo odlučili da ćemo uzet prosječnu kaznu za ova djela
 INSERT INTO Kaznjiva_djela(naziv, opis, predvidena_kazna, predvidena_novcana_kazna) VALUES
@@ -288,51 +289,109 @@ INSERT INTO Kaznjiva_djela(naziv, opis, predvidena_kazna, predvidena_novcana_kaz
 ('Krađa', 'Nezakonito prisvajanje tuđe imovine bez pristanka vlasnika, s namjerom trajnog oduzimanja.', NULL, 500.00),
 ('Provala', 'Nezakoniti ulazak u neki prostor ili objekt s namjerom počinjenja kaznenog djela, obično krađe ili uništavanja imovine.', NULL, 1000.00),
 ('Pljačka', 'Nasilno oduzimanje imovine ili stvari od osobe ili mjesta, često uz prijetnju ili upotrebu sile.', 0.5, NULL),
+
 ('Brza vožnja', 'Vožnja vozila brzinom koja prelazi dopuštene granice, često kršenje prometnih propisa.', NULL, 500.00),
 ('Vožnja pod utjecajem substanci', 'Vožnja vozila dok je osoba pod utjecajem alkohola, droga ili drugih psihoaktivnih tvari.', NULL, 750.00),
 ('Vožnja bez vozačke', 'Vožnja vozila bez valjane vozačke dozvole ili s isteklom dozvolom.', NULL, 750.00),
 ('Vandalzam', 'Namjerno uništavanje ili oštećenje tuđe imovine, često iz čistog besmisla ili bez razloga.', NULL, 200.00),
 ('Mito', 'Nezakonito davanje ili primanje novca ili drugih koristi kako bi se utjecalo na postupanje ili odluke osobe u javnom položaju.', NULL, 300.00),
+
 ('Ubojstvo', 'Ubojstvo je izuzetno ozbiljno kazneno djelo u kojem osoba namjerno uzrokuje smrt drugoj osobi.', 10, NULL),
 ('Ubojstvo iz nehata', 'Uzrok smrti druge osobe bez namjere ili predumišljaja, obično zbog nepažnje ili neopreznosti.', 5, NULL),
 ('Prijevara', 'Namjerno obmanjivanje ili zavaravanje drugih s ciljem stjecanja imovinske dobiti ili drugih koristi.', NULL, 250.00),
 ('Nasilje u obitelji', 'Fizičko, emocionalno ili ekonomsko zlostavljanje unutar obitelji.', 0.2, NULL),
 ('Zloupotreba droga', 'Nezakonito posjedovanje, proizvodnja, distribucija ili trgovina drogama.', NULL, 500.00),
+
 ('Pranje novca', 'Skrivanje porijekla ilegalno stečenih sredstava kako bi se prikazala kao zakonito stecana imovina.', 1, NULL),
 ('Napad', 'Namjerno nanošenje tjelesnih ozljeda ili prijetnja nanošenjem ozljeda drugoj osobi.', 0.5, NULL),
 ('Razbojništvo', 'Krađa koja uključuje prijetnju ili upotrebu sile kako bi se postigao cilj.', 0.5, NULL),
 ('Sablazan', 'Ponašanje koje je uvredljivo ili koje izaziva gađenje i protivi se društvenim normama.', NULL, 450.00),
 ('Nedozvoljeno posjedovanje oružja', 'Posjedovanje oružja bez potrebnih dozvola ili u suprotnosti s određenim uvjetima.', 0.5, NULL),
+
 ('Korupcija', 'Zloupotreba javne moći ili povlastica radi stjecanja osobne koristi ili koristi trećih strana.', 0.5, NULL),
 ('Nedozvoljeno snimanje ili prisluškivanje', 'Neovlašteno bilježenje razgovora ili prisluškivanje komunikacija bez pristanka svih uključenih strana.', NULL, 750.00); 
  
  -- Tablica Pas(11)(svaki cin osim voditelja moze biti trener)
- INSERT INTO Pas(id_trener, oznaka, godina_rođenja, status, id_kaznjivo_djelo) VALUES
- (1, 'K9-123', 2022, 'aktivan', 1),
- (2, 'K9-456', 2020, 'nije za teren', 1),
- (5, 'K9-789', 2014, 'umirovljen', 1),
- (6, 'K9-987', 2022, 'aktivan', 1),
- (7, 'K9-654', 2021, 'aktivan', 15),
- (8, 'K9-321', 2019, 'aktivan', 15),
- (9, 'K9-111', 2022, 'aktivan', 15),
- (11, 'K9-454', 2021, 'aktivan', 11),
- (13, 'K9-999', 2016, 'umirovljen', 11);
+ INSERT INTO Pas(id_trener, oznaka, dob, status, id_kaznjivo_djelo) VALUES
+(1, 'K9-123', 2022, 'aktivan', 1),
+(2, 'K9-456', 2020, 'nije za teren', 1),
+(5, 'K9-789', 2014, 'umirovljen', 1),
+(6, 'K9-987', 2022, 'aktivan', 1),
+(7, 'K9-654', 2021, 'aktivan', 15),
+(8, 'K9-321', 2019, 'aktivan', 15),
+(9, 'K9-111', 2022, 'aktivan', 15),
+(11, 'K9-454', 2021, 'aktivan', 11),
+(13, 'K9-999', 2016, 'umirovljen', 11);
  
- -- Tablica Slucaj
- -- Tablica evidencija događaja
- -- Tablica kažnjva djela u slucaju
- -- Tablica Izvjestaji
- -- Tablica Zapljene
-INSERT INTO Sredstva_utvrdivanje_istine(naziv) VALUES
+ -- Tablica Slucaj(12)
+ INSERT INTO Slucaj(naziv, opis, pocetak, zavrsetak, status, id_pocinitelj, id_izvjestitelj, id_voditelj, id_dokaz, ukupna_vrijednost_zapljena, id_pas, id_svjedok, id_ostecenik) VALUES
+ ('Digitalno nasilje #1', 'Počinitelj je konstantno zlostavljao oštećenika preko mnogih socijalnih medija te prijetio da će počiniti fizičko nasilje nad oštećenikom i nad njegovom obitelji', STR_TO_DATE('12.09.2018.', '%d.%m.%Y.'), STR_TO_DATE('25.09.2018.', '%d.%m.%Y.'), 'riješen', 26, 27, 9, NULL, NULL, NULL, NULL, 27),
+ ('Nestala osoba #1', 'Nestala osoba je prijavljena u ranim satima jutra, zabrinuta sestra je nazvala policiju nakon što nije čula od svog brata više od 24 sata', STR_TO_DATE('11.07.2020.', '%d.%m.%Y.'), STR_TO_DATE('13.07.2020.', '%d.%m.%Y.'), 'riješen', NULL, 49, 6, NULL, NULL, NULL, NULL, 50), 
+ ('Vožnja pod utjecajem #1', 'Osoba je zaustavljena zbog sumnje vožnje pod utjecajem, pristala je puhati te je napuhala 1.2 na alkotestu', STR_TO_DATE('20.11.2019.', '%d.%m.%Y.'), STR_TO_DATE('20.11.2019.', '%d.%m.%Y.'), 'riješen', 40, NULL, 12, NULL, NULL, NULL, NULL, NULL),
+ ('Ubojstvo i krađa #1', 'Osumnjičeni je otišao u banku te ubio radnika u njoj', STR_TO_DATE('29.08.2023.', '%d.%m.%Y.'), NULL, 'aktivan', 32, NULL, 9, 2, 10000, 7, 30, 31),
+ ('Ubojstvo i krađa #2', 'Navodno je osoba ušla u trgovinu, ubila radika te uzela sve iz kase', STR_TO_DATE('06.07.2020.', '%d.%m.%Y.'), STR_TO_DATE('15.11.2023.', '%d.%m.%Y.'), 'arhiviran', NULL, 44, 12, NULL, NULL, NULL, 33, NULL),
+ ('Nasilje u obitelj #1','Osoba je nazvala te priznala da ih osoba u obitelji fizički i psihički zlstavlja već duže vrijeme', STR_TO_DATE('09.02.2022.', '%d.%m.%Y.'), NULL, 'aktivan', 47, 46, 12, 7, NULL, NULL, 45, 46),
+ ('Provala #1', 'Osoba je nazvala u kasnim satima noći nakon što je ušla u stan te je primjetila da joj je puno osobnih predmeta nestalo', STR_TO_DATE('12.03.2020.', '%d.%m.%Y.'), STR_TO_DATE('17.03.2020.', '%d.%m.%Y.'), 'riješen', 32, 33, 9, 10, NULL, NULL, NULL, 33);
+ 
+ -- Tablica evidencija događaja(13)
+ INSERT INTO Evidenciaj_dogadaja(id_slucaj, opis_dogadaja, datum_vrijeme, id_mjesto) VALUES
+ (1, 'Ispitana je osoba koja je optužena, priznala je svim optužbama', STR_TO_DATE('17.09.2018. 13:00:00', '%d.%m.%Y. %h:%i:%s'), 36),
+ (2, 'Poziv kojim se prijavila nestala osoba', STR_TO_DATE('11.07.2020. 08:00:00', '%d.%m.%Y. %h:%i:%s'), 4), 
+ (2, 'Pronađena nestala osoba', STR_TO_DATE('13.07.2020. 16:30:00', '%d.%m.%Y. %h:%i:%s'), 25),
+ (3, 'Zaustavljen je auto zbog sumnje da je vozač pod utjecajem alkohola', STR_TO_DATE('20.11.2019. 23:00:00', '%d.%m.%Y. %h:%i:%s'), 4), 
+ (4, 'Ovlaštena osoba je došla na scenu te ispitala ostale radnike u poslovnom objektu', STR_TO_DATE('29.08.2023. 09:00:00', '%d.%m.%Y. %h:%i:%s'), 5), 
+ (4, 'Prikupljeni su svi dokazi', STR_TO_DATE('31.08.2023. 16:30:00', '%d.%m.%Y. %h:%i:%s'), 5),
+ (5, 'Uzeti su svi potencijalni dokazi za daljne testiranje', STR_TO_DATE('06.07.2020. 21:00:00', '%d.%m.%Y. %h:%i:%s'), 4),
+ (6, 'Ispitana je osoba koja je prijavila zlostavljanje', STR_TO_DATE('10.02.2022. 14:30:00', '%d.%m.%Y. %h:%i:%s'), 36),
+ (6, 'Ispitana je osoba koja je optužena sa zlostavljanjem', STR_TO_DATE('10.02.2022. 15:00:00', '%d.%m.%Y. %h:%i:%s'), 36),
+ (7, 'Ovlaštena osoba je došla u stan i prikupila dokaze i izvještaj osobe', STR_TO_DATE('12.03.2020. 20:00:00', '%d.%m.%Y. %h:%i:%s'), 2);
+ 
+ -- Tablica kažnjva djela u slucaju(14)
+ INSERT INTO Kaznjiva_djela_u_slucaju(id_mjesto, id_slucaj, id_kaznjivo_djelo) VALUES
+ (36, 1, 3),
+ (36, 1, 19),
+ (1, 3, 6),
+ (1, 3, 7),
+ (5, 4, 5),
+ (5, 4, 11),
+ (5, 4, 20),
+ (3, 5, 5),
+ (3, 5, 11),
+ (2, 6, 2),
+ (2, 6, 14),
+ (36, 7, 4),
+ (36, 7, 9);
+ 
+ -- Tablica Izvjestaji(15)
+ INSERT INTO Izvjestaji(naslov, sadrzaj, id_autor, id_slucaj) VALUES
+ ('Izvještaj o digitalnom nasilju #1', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 10, 1),
+ ('Izvještaj o nestaloj osobi #1', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 7, 2),
+ ('Izvještaj o vožnji pod utjecajem #1', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 13, 3),
+ ('Izvještaj o ubojstvu i krađi #1', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 10, 4),
+ ('Izvještaj o ubojstvu i krađi #2', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 13, 5),
+ ('Izvještaj o nasilju u obitelji #1', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 13, 6),
+ ('Izvještaj o pljačci #1', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', 10, 7);
+ 
+ -- Tablica Zapljene(16)
+ INSERT INTO Zapljene(id_slucaj, id_predmet, vrijednost) VALUES
+ (4, 2, 100.00),
+ (4, 15, 10000.00),
+ (6, 7, 15.00),
+ (6, 9, 12.00);
+ 
+ -- Tablica Sredstvo_utvrdivanja_istine(17)
+INSERT INTO Sredstvo_utvrdivanja_istine(naziv) VALUES
 ('Poligraf'),
 ('alkotest'),
 ('urin_test'),
 ('krv_test'),
 ('ispitivanje');
 
--- Tablica sui_slucaj
-
--- događaj - krađa(1)
--- slučaj - više događaj
--- status slučaja - rješen, aktivan, završeno(arhiviran), 
--- poseban slučaj za svaku osobu
+-- Tablica sui_slucaj(18)
+INSERT INTO Sui_slucaj(id_sui, id_sluca,j) VALUES
+(1, 4),
+(5, 1),
+(5, 2),
+(2, 3),
+(3, 3),
+(4, 6);

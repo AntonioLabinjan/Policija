@@ -307,16 +307,16 @@ INSERT INTO Kaznjiva_djela(naziv, opis, predvidena_kazna, predvidena_novcana_kaz
 ('Nedozvoljeno snimanje ili prisluškivanje', 'Neovlašteno bilježenje razgovora ili prisluškivanje komunikacija bez pristanka svih uključenih strana.', NULL, 750.00); 
  
  -- Tablica Pas(11)(svaki cin osim voditelja moze biti trener)
- INSERT INTO Pas(id_trener, oznaka, dob, status, id_kaznjivo_djelo) VALUES
- (1, 'K9-123', 2, 'aktivan', 1),
- (2, 'K9-456', 4, 'nije za teren', 1),
- (5, 'K9-789', 10, 'umirovljen', 1),
- (6, 'K9-987', 2, 'aktivan', 1),
- (7, 'K9-654', 3, 'aktivan', 15),
- (8, 'K9-321', 5, 'aktivan', 15),
- (9, 'K9-111', 1, 'aktivan', 15),
- (11, 'K9-454', 3, 'aktivan', 11),
- (13, 'K9-999', 9, 'umirovljen', 11);
+ INSERT INTO Pas(id_trener, oznaka, godina_rođenja, status, id_kaznjivo_djelo) VALUES
+ (1, 'K9-123', 2022, 'aktivan', 1),
+ (2, 'K9-456', 2020, 'nije za teren', 1),
+ (5, 'K9-789', 2014, 'umirovljen', 1),
+ (6, 'K9-987', 2022, 'aktivan', 1),
+ (7, 'K9-654', 2021, 'aktivan', 15),
+ (8, 'K9-321', 2019, 'aktivan', 15),
+ (9, 'K9-111', 2022, 'aktivan', 15),
+ (11, 'K9-454', 2021, 'aktivan', 11),
+ (13, 'K9-999', 2016, 'umirovljen', 11);
  
  -- Tablica Slucaj
  -- Tablica evidencija događaja

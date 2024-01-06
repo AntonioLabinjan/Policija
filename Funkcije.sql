@@ -1,5 +1,4 @@
-# FUNKCIJE + upiti za funkcije
-# Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
+# 1. Napiši funkciju koja kao argument prima naziv kaznenog djela i vraća naziv KD, predviđenu kaznu i broj pojavljivanja KD u slučajevima
 DELIMITER //
 CREATE FUNCTION KDInfo(naziv_kaznjivog_djela VARCHAR(255)) RETURNS TEXT
 DETERMINISTIC
@@ -22,7 +21,7 @@ DELIMITER ;
 
 SELECT KDInfo('NazivKaznenogDjela');
 
-# Napiši upit koji će koristeći ovu funkciju izlistati sva kaznena djela koja su se dogodila u 2023. godini (ili nekoj drugoj) i njihov broj pojavljivanja
+# 18. Napiši upit koji će koristeći ovu funkciju izlistati sva kaznena djela koja su se dogodila u 2023. godini (ili nekoj drugoj) i njihov broj pojavljivanja
 SELECT
     KDInfo(KD.Naziv) AS KaznjivoDjeloInfo,
     COUNT(KS.id_kaznjivo_djelo) AS BrojPojavljivanja
@@ -33,7 +32,7 @@ WHERE YEAR(S.Pocetak) = 2023
 GROUP BY KD.Naziv;
 
 
-# Napiši funkciju koja će vratiti informacije o osobi prema broju telefona
+# 2. Napiši funkciju koja će vratiti informacije o osobi prema broju telefona
 DELIMITER //
 CREATE FUNCTION InformacijeOOsobiPoTelefonu(broj_telefona VARCHAR(20)) RETURNS TEXT
 DETERMINISTIC
@@ -54,7 +53,7 @@ END;
 //
 DELIMITER ;
 
-# Napiši upit koji će izlistati sve brojeve telefona i informacije o tim osobama, ali samo ako te osobe nisu policijski službenici
+# 19. Napiši upit koji će izlistati sve brojeve telefona i informacije o tim osobama, ali samo ako te osobe nisu policijski službenici
 SELECT
     Telefon,
     InformacijeOOsobiPoTelefonu(Telefon) AS OsobaInfo
@@ -63,7 +62,7 @@ WHERE Osoba.id NOT IN(SELECT id_osoba FROM Zaposlenik);
 
 
 SET SQL_safe_updates = 0;
-# Napiši funkciju koja će za određeni predmet vratiti slučaj u kojem je taj predmet dokaz i osobu koja je u tom slučaju osumnjičena
+# 3. Napiši funkciju koja će za određeni predmet vratiti slučaj u kojem je taj predmet dokaz i osobu koja je u tom slučaju osumnjičena
 DELIMITER //
 
 CREATE FUNCTION DohvatiSlucajIOsobu(id_predmet	INT)
@@ -77,14 +76,14 @@ BEGIN
     
     SELECT Slucaj.Naziv INTO slucaj_naziv
     FROM Slucaj
-    WHERE Slucaj.id_dokaz= predmet_id;
+    WHERE Slucaj.id_dokaz= id_predmet;
     
     
     SELECT Osoba.Ime_Prezime INTO osoba_ime_prezime
     FROM Osoba
     INNER JOIN Slucaj ON Osoba.Id = Slucaj.id_pocinitelj
     WHERE Slucaj.id_dokaz
-    = predmet_id;
+    = id_predmet;
     
     
     SET rezultat = CONCAT('Odabrani je predmet dokaz u slučaju: ', slucaj_naziv, ', gdje je osumnjičena osoba: ', osoba_ime_prezime);
@@ -93,7 +92,7 @@ BEGIN
 END //
 
 DELIMITER ;
-# Napiši upit koji izdvaja informacije o određenom predmetu, uključujući naziv predmeta, naziv povezanog slučaja i ime i prezime osumnjičenika u tom slučaju, koristeći funkciju DohvatiSlucajIOsobu za dobijanje dodatnih detalja za taj predmet.
+# 20. Napiši upit koji izdvaja informacije o određenom predmetu, uključujući naziv predmeta, naziv povezanog slučaja i ime i prezime osumnjičenika u tom slučaju, koristeći funkciju DohvatiSlucajIOsobu za dobijanje dodatnih detalja za taj predmet.
 SELECT
     Predmet.ID AS PredmetID,
     Predmet.Naziv AS NazivPredmeta,
@@ -103,10 +102,10 @@ SELECT
 FROM Predmet
 INNER JOIN Slucaj ON Predmet.ID = Slucaj.id_dokaz
 INNER JOIN Osoba ON Slucaj.id_pocinitelj = Osoba.ID
-WHERE Predmet.ID = 5;
+WHERE Predmet.Id = 5;
 
 
-# Napravi funkciju koja će za argument primati sredstvo utvrđivanja istine, zatim će prebrojiti u koliko je slučajeva to sredstvo korišteno, prebrojit će koliko je slučajeva od tog broja riješeno, te će na temelju ta 2 podatka izračunati postotak rješenosti slučajeva gdje se odabrano sredstvo koristi
+# 4. Napravi funkciju koja će za argument primati sredstvo utvrđivanja istine, zatim će prebrojiti u koliko je slučajeva to sredstvo korišteno, prebrojit će koliko je slučajeva od tog broja riješeno, te će na temelju ta 2 podatka izračunati postotak rješenosti slučajeva gdje se odabrano sredstvo koristi
 DELIMITER //
 
 CREATE FUNCTION IzracunajPostotakRjesenosti (
@@ -138,7 +137,7 @@ END //
 
 DELIMITER ;
 
-# Koristeći gornju funkciju prikaži sredstva koja imaju rješenost veću od 50% (riješeno je više od 50% slučajeva koja koriste to sredstvo)
+# 21. Koristeći gornju funkciju prikaži sredstva koja imaju rješenost veću od 50% (riješeno je više od 50% slučajeva koja koriste to sredstvo)
 SELECT
     Sredstvo_utvrdivanja_istine.ID AS id_sredstvo,
     Sredstvo_utvrdivanja_istine.Naziv AS Naziv_Sredstva,
@@ -146,7 +145,7 @@ SELECT
 FROM Sredstvo_utvrdivanja_istine
 WHERE IzracunajPostotakRjesenosti(Sredstvo_utvrdivanja_istine.ID) > 50.00;
 
-# Napiši funkciju koja će za argument primati registarske tablice vozila, a vraćat će informaciju je li se to vozilo pojavilo u nekom od slučajeva, tako što će provjeriti je li se id_osoba koji referencira vlasnika pojavio u nekom slučaju kao pocinitelj_id. Ako se pojavilo, vraćat će "Vozilo se pojavljivalo u slučajevima", a ako se nije pojavilo, vraćat će "Vozilo se nije pojavljivalo u slučajevima". Također, vratit će i broj koliko se puta vozilo pojavilo
+# 5. Napiši funkciju koja će za argument primati registarske tablice vozila, a vraćat će informaciju je li se to vozilo pojavilo u nekom od slučajeva, tako što će provjeriti je li se id_osoba koji referencira vlasnika pojavio u nekom slučaju kao pocinitelj_id. Ako se pojavilo, vraćat će "Vozilo se pojavljivalo u slučajevima", a ako se nije pojavilo, vraćat će "Vozilo se nije pojavljivalo u slučajevima". Također, vratit će i broj koliko se puta vozilo pojavilo
 DELIMITER //
 CREATE FUNCTION Provjera_vozila(Registracija VARCHAR(20)) RETURNS VARCHAR(100)
 DETERMINISTIC
@@ -171,7 +170,7 @@ BEGIN
 END //
 DELIMITER ;
 
-# Koristeći funkciju prikažite vozila koja se pojavljuju iznad prosjeka (u iznadprosječnom broju)
+# 22. Koristeći funkciju prikažite vozila koja se pojavljuju iznad prosjeka (u iznadprosječnom broju)
 CREATE TEMPORARY TABLE Prosjek_Pojavljivanja AS
 SELECT AVG(count) AS Prosjek
 FROM (
@@ -191,10 +190,21 @@ INNER JOIN (
 ) AS Podupit2 ON V.Registracija = Podupit2.Registracija
 WHERE Podupit2.count > (SELECT Prosjek FROM Prosjek_Pojavljivanja);
 
+# Vozila koja su se pojavila u više od 3 slučaja u zadnjih 6 mjeseci
+
+SELECT V.Registracija, Provjera_vozila(V.Registracija) AS Status_Vozila
+FROM Vozilo V
+INNER JOIN (
+    SELECT Vozilo.Registracija, COUNT(*) AS count
+    FROM Slucaj
+    INNER JOIN Vozilo ON Slucaj.id_pocinitelj = Vozilo.id_vlasnik
+    WHERE Slucaj.Pocetak > DATE_SUB(NOW(), INTERVAL 6 MONTH)
+    GROUP BY Vozilo.Registracija
+) AS Izracun ON V.Registracija = Podupit.Registracija
+WHERE Izracun.count > 3;
 
 
-
-# Funkcija koja za argument prima id podrucja uprave i vraća broj mjesta u tom području te naziv svih mjesta u 1 stringu
+# 6. Funkcija koja za argument prima id podrucja uprave i vraća broj mjesta u tom području te naziv svih mjesta u 1 stringu
 DELIMITER //
 CREATE FUNCTION Podaci_O_Podrucju(id_podrucje INT) RETURNS TEXT
 DETERMINISTIC
@@ -215,7 +225,7 @@ BEGIN
 END //
 DELIMITER ;
 
-# Napravi funkciju koje će za slučej predan preko id-ja dohvatiti broj kažnjivih djela u njemu
+# 7. Napravi funkciju koje će za slučej predan preko id-ja dohvatiti broj kažnjivih djela u njemu
 DELIMITER //
 
 CREATE FUNCTION Broj_Kaznjivih_Djela_U_Slucaju(id_slucaj INT) RETURNS INT
@@ -235,7 +245,7 @@ DELIMITER ;
 
 SELECT Broj_Kaznjivih_Djela_U_Slucaju(5);
 
-# Koristeći gornju funkciju napiši upit koji će naći slučaj s najviše kažnjivih djela
+# 23. Koristeći gornju funkciju napiši upit koji će naći slučaj s najviše kažnjivih djela
 SELECT
     S.ID AS id_slucaj,
     S.Naziv AS Naziv_Slucaja,
@@ -243,8 +253,7 @@ SELECT
 FROM Slucaj S
 GROUP BY id_slucaj, Naziv_Slucaja;
 
-
-# Funkcija koje će za argument primati status slučajeva i vratiti će broj slučajeva sa tim statusom
+# 8. Funkcija koje će za argument primati status slučajeva i vratiti će broj slučajeva sa tim statusom
 DELIMITER //
 CREATE FUNCTION broj_slucajeva_po_statusu(status VARCHAR(20)) RETURNS INT
 DETERMINISTIC
@@ -265,7 +274,7 @@ END;
 //
 DELIMITER ;
 
-# Koristeći gornju funkciju napravi upit koji će dohvatiti sve statuse koji vrijede za više od 5 slučajeva (ili neki drugi broj)
+# 24. Koristeći gornju funkciju napravi upit koji će dohvatiti sve statuse koji vrijede za više od 5 slučajeva (ili neki drugi broj)
 SELECT 
     Status,
     COUNT(*) AS broj_slucajeva
@@ -276,7 +285,7 @@ GROUP BY
 HAVING
     broj_slucajeva_po_statusu(Status) > 5; -- Prilagodimo broj prema potrebi
 
-# Funkcija koja za argument prima id_slucaj i računa njegovo trajanje; ako je završen, onda trajanje od početka do završetka, a ako nije, onda trajanje od početka do poziva funkcije
+# 9. Funkcija koja za argument prima id_slucaj i računa njegovo trajanje; ako je završen, onda trajanje od početka do završetka, a ako nije, onda trajanje od početka do poziva funkcije
 DELIMITER //
 CREATE FUNCTION Informacije_o_slucaju(id_slucaj INT) RETURNS TEXT
 DETERMINISTIC
@@ -302,7 +311,7 @@ END;
 //
 DELIMITER ;
 
-# Napiši upit koji će dohvatiti sve slučajeve i pomoću funkcije iščitati njihove statuse i trajanja
+# 25. Napiši upit koji će dohvatiti sve slučajeve i pomoću funkcije iščitati njihove statuse i trajanja
     SELECT 
     Id AS 'ID slučaja',
     Naziv AS 'Naziv slučaja',
@@ -310,7 +319,7 @@ DELIMITER ;
 FROM 
     Slucaj;
 
--- Napiši funckiju koja će za zaposlenika definiranog parametron p_id_zaposlenik izbrojiti broj slučajeva na kojima je on bio voditelj i izračunati 
+-- 10. Napiši funckiju koja će za zaposlenika definiranog parametron p_id_zaposlenik izbrojiti broj slučajeva na kojima je on bio voditelj i izračunati 
 -- postotak rješenosti tih slučajeva te na temelju toga ispiše je li zaposlenik neuspješan (0%-49%) ili uspješan (50%-100%).
 
 DELIMITER //
@@ -340,7 +349,7 @@ END IF;
 END//
 DELIMITER ;
 
-# upit koji će za svakog zaposlenika pozvati funkciju uspješnosti i vratiti rezultat, osim ako nije vodio slučajeve, onda će vratiti odgovarajuću obavijest
+# 26. upit koji će za svakog zaposlenika pozvati funkciju uspješnosti i vratiti rezultat, osim ako nije vodio slučajeve, onda će vratiti odgovarajuću obavijest
     SELECT
     Z.Id AS 'ID zaposlenika',
     Z.Ime_Prezime AS 'Ime i prezime zaposlenika',
@@ -352,7 +361,7 @@ DELIMITER ;
 FROM
     Zaposlenik Z;
 
--- Napiši funkciju koja će za osobu definiranu parametrom p_id_osoba vratiti "DA" ako je barem jednom bila oštećenik u nekom slučaju, a u 
+-- 11. Napiši funkciju koja će za osobu definiranu parametrom p_id_osoba vratiti "DA" ako je barem jednom bila oštećenik u nekom slučaju, a u 
 -- protivnom će vratiti "NE."
 
 DELIMITER //
@@ -372,7 +381,7 @@ END IF;
 
 END//
 DELIMITER ;
-# Prikaži sve osobe koje su oštećene više od 3 puta
+# 27. Prikaži sve osobe koje su oštećene više od 3 puta
     SELECT
     O.Id AS 'ID osobe',
     O.Ime_Prezime AS 'Ime i prezime osobe'
@@ -385,7 +394,7 @@ GROUP BY
 HAVING
     COUNT(*) > 3;
 
-# Napiši funkciju koja će za osobu određenu predanim id_jem odrediti sve uloge koje je ta osoba imala u slučajevima
+# 12. Napiši funkciju koja će za osobu određenu predanim id_jem odrediti sve uloge koje je ta osoba imala u slučajevima
 DELIMITER //
 
 CREATE FUNCTION Uloge_Osobe_U_Slucajevima(osoba_id INT) RETURNS VARCHAR(255)
@@ -429,12 +438,11 @@ END //
 
 DELIMITER ;
 
-# UPIT KOJI ĆE DOHVATITI SVE OSOBE I NJIHOVE ULOGE U SLUČAJEVIMA
+# 28. UPIT KOJI ĆE DOHVATITI SVE OSOBE I NJIHOVE ULOGE U SLUČAJEVIMA
 SELECT id, ime_prezime, UlogeOsobeUSlucajevima(id) AS uloge
 FROM Osoba;
-
 DELIMITER //
-# Funkcija koja će vratiti je li osoba sumnjiva (već je osumnjičena na nekim slučajevima) ili nije sumnjiva
+# 13. Funkcija koja će vratiti je li osoba sumnjiva (već je osumnjičena na nekim slučajevima) ili nije sumnjiva
     
 CREATE FUNCTION Sumnjivost_Osobe(osoba_id INT) RETURNS VARCHAR(50)
 DETERMINISTIC
@@ -459,11 +467,11 @@ END //
 
 DELIMITER ;
 
-# Napiši upit koji će dohvatiti sve osobe, pa i policajce; nije nemoguće da policajac bude kriminalac :) i podatke o njihovoj sumnjivosti
+# 29. Napiši upit koji će dohvatiti sve osobe, pa i policajce; nije nemoguće da policajac bude kriminalac :) i podatke o njihovoj sumnjivosti
 SELECT id, ime_prezime, SumnjivostOsobe(id) AS sumnjivost
 FROM Osoba;
 
-# Napiši funkciju koja će za dani odjel definiran id-jem koji joj prosljeđujemo za argument vratiti broj zaposlenih na tom odjelu u zadnjih 6 mjeseci
+# 14. Napiši funkciju koja će za dani odjel definiran id-jem koji joj prosljeđujemo za argument vratiti broj zaposlenih na tom odjelu u zadnjih 6 mjeseci
 DELIMITER //
 
 CREATE FUNCTION Broj_zaposlenih_6mj(odjel_id INT) 
@@ -483,13 +491,13 @@ END //
 DELIMITER ;
 SELECT Broj_zaposlenih_6mj(5);
 
-# Napiši upit koji će vratiti id i naziv odjela koji je imao  najveći broj zaposlenih u zadnjih 6 mjeseci
+# 30. Napiši upit koji će vratiti id i naziv odjela koji je imao  najveći broj zaposlenih u zadnjih 6 mjeseci
 SELECT id, naziv, Broj_zaposlenih_6mj(id) AS Broj_zaposlenih
 FROM odjeli
 ORDER BY Broj_zaposlenih DESC
 LIMIT 1;
 
-# Napiši funkciju koja će za odjel definiran prosljeđenim id-jem dohvatiti broj zaposlenih i broj slučajeva. Zatim
+# 15. Napiši funkciju koja će za odjel definiran prosljeđenim id-jem dohvatiti broj zaposlenih i broj slučajeva. Zatim
 # će računati koliko prosječno ima slučajeva po osobi na tom odjelu
 DELIMITER //
 
@@ -524,15 +532,16 @@ DELIMITER ;
 
 SELECT Avg_Slucaj_Osoba_Odjel(5);
 
-#Koristeći ovu funkciju napiši upit za pronalaženje odjela s ispodprosječnim brojem slučajeva po osobi
+#31. Koristeći ovu funkciju napiši upit za pronalaženje odjela s ispodprosječnim brojem slučajeva po osobi
 SELECT naziv AS Nazivi_ispodprosječnih_odjela
 FROM Odjeli
 WHERE Avg_Slucaj_Osoba_Odjel(id) < 
     (SELECT AVG(Avg_Slucaj_Osoba_Odjel(id)) FROM Odjeli);
 
-# Na isti način napiši i upit za pronalaženje odjela s iznadprosječnim brojem slučajeva po osobi
+# 32. Na isti način napiši i upit za pronalaženje odjela s iznadprosječnim brojem slučajeva po osobi
 -- Upit za pronalaženje odjela s ispodprosječnim brojem slučajeva po osobi
 SELECT id, naziv
 FROM Odjeli
 WHERE Avg_Slucaj_Osoba_Odjel(id) >
     (SELECT AVG(Avg_Slucaj_Osoba_Odjel(id)) FROM Odjeli);
+	

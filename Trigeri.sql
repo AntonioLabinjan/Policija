@@ -1,5 +1,6 @@
-# TRIGERI
-# Napiši triger koji će onemogućiti da za slučaj koji u sebi ima određena kaznena djela koristimo psa koji nije zadužen za ta ista djela u slučaju
+#TRIGERI
+# 20 Trigera
+# 1. Napiši triger koji će onemogućiti da za slučaj koji u sebi ima određena kaznena djela koristimo psa koji nije zadužen za ta ista djela u slučaju
 	DELIMITER //
 
 CREATE TRIGGER bi_pas_slucaj_KD
@@ -22,7 +23,7 @@ END;
 
 DELIMITER ;
 
-# Iako postoji opcija kaskadnog brisanja u SQL-u, ovdje ćemo u nekim slučajevima pomoću trigera htijeti zabraniti brisanje, pošto je važno da neki podaci ostanu zabilježeni. U iznimnim slučajevima možemo ostavljati obavijest da je neka vrijednost obrisana iz baze. Također, u većini slučajeva nam opcija kaskadnog brisanja nikako ne bi odgovarala, zato što je u radu policije važna kontinuirana evidencija
+# 2. Iako postoji opcija kaskadnog brisanja u SQL-u, ovdje ćemo u nekim slučajevima pomoću trigera htijeti zabraniti brisanje, pošto je važno da neki podaci ostanu zabilježeni. U iznimnim slučajevima možemo ostavljati obavijest da je neka vrijednost obrisana iz baze. Također, u većini slučajeva nam opcija kaskadnog brisanja nikako ne bi odgovarala, zato što je u radu policije važna kontinuirana evidencija
 # Napiši triger koji će a) ako u području uprave više od 5 mjesta, zabraniti brisanje uz obavijest: "Područje uprave s više od 5 mjesta ne smije biti obrisano" b) ako u području uprave ima manje od 5 mjesta, dopustiti da se područje uprave obriše, ali će se onda u mjestima koja referenciraju to područje uprave, pojaviti obavijest "Prvotno područje uprave je obrisano, povežite mjesto s novim područjem"
 DELIMITER //
 CREATE TRIGGER bd_podrucje_uprave
@@ -46,7 +47,7 @@ END;
 //
 DELIMITER ;
 
-# Napiši triger koji će a) spriječiti brisanje osobe ako je ona zaposlenik koji je još u službi (datum izlaska iz službe nije null) uz obavijest:
+# 3. Napiši triger koji će a) spriječiti brisanje osobe ako je ona zaposlenik koji je još u službi (datum izlaska iz službe nije null) uz obavijest:
 # "osoba koju pokušavate obrisati je zaposlenik, prvo ju obrišite iz tablice zaposlenika)" b) obrisati osobu i iz tablice zaposlenika i iz tablice osoba, 
 # ukoliko datum_izlaska_iz_službe ima neku vrijednost što ukazuje da osoba više nije zaposlena
 DELIMITER //
@@ -70,7 +71,7 @@ END;
 DELIMITER ;
 
 
-# Napiši triger koji će, u slučaju da se kažnjivo djelo obriše iz baze, postaviti id_kaznjivo_djelo kod psa na NULL, ukoliko je on prije bio zadužen za upravo to KD koje smo obrisali
+# 4. Napiši triger koji će, u slučaju da se kažnjivo djelo obriše iz baze, postaviti id_kaznjivo_djelo kod psa na NULL, ukoliko je on prije bio zadužen za upravo to KD koje smo obrisali
 DELIMITER //
 CREATE TRIGGER ad_pas
 AFTER DELETE ON Kaznjiva_djela
@@ -83,14 +84,14 @@ END;
 //
 DELIMITER ;
 
-# Napiši triger koji će zabraniti da iz tablice obrišemo predmete koji služe kao dokazi u aktivnim slučajevima (status im nije završeno, te se ne nalaza u arhivi) uz obavijest "Ne možete obrisati dokaze za aktivan slučaj"
+# 5. Napiši triger koji će zabraniti da iz tablice obrišemo predmete koji služe kao dokazi u aktivnim slučajevima (status im nije završeno, te se ne nalaza u arhivi) uz obavijest "Ne možete obrisati dokaze za aktivan slučaj"
 DELIMITER //
 CREATE TRIGGER bd_dokaz
 BEFORE DELETE ON Predmet
 FOR EACH ROW
 BEGIN
     DECLARE aktivan INT;
-    SELECT COUNT(*) INTO aktivan FROM Slucaj WHERE id_dokaz = OLD.id AND status != 'Završeno';
+    SELECT COUNT(*) INTO aktivan FROM Slucaj WHERE id_dokaz = OLD.id AND status != 'Riješen';
     
     IF aktivan > 0 THEN
         SIGNAL SQLSTATE '45000'
@@ -100,14 +101,14 @@ END;
 //
 DELIMITER ;
 
-# Napiši triger koji će zabraniti da iz tablice obrišemo osobe koje su evidentirani kao počinitelji u aktivnim slučajevima
+# 6. Napiši triger koji će zabraniti da iz tablice obrišemo osobe koje su evidentirani kao počinitelji u aktivnim slučajevima
 DELIMITER //
 CREATE TRIGGER bd_osoba_2
 BEFORE DELETE ON Osoba
 FOR EACH ROW
 BEGIN
     DECLARE je_pocinitelj INT;
-    SELECT COUNT(*) INTO je_pocinitelj FROM Slucaj WHERE id_pocinitelj = OLD.id AND status != 'Završeno';
+    SELECT COUNT(*) INTO je_pocinitelj FROM Slucaj WHERE id_pocinitelj = OLD.id AND status != 'Riješen';
     
     IF je_pocinitelj > 0 THEN
         SIGNAL SQLSTATE '45000'
@@ -117,7 +118,7 @@ END;
 //
 DELIMITER ;
 
-# Napiši triger koji će zabraniti brisanje bilo kojeg izvještaja kreiranog za slučajeve koji nisu završeni (završetak je NULL), ili im je završetak "noviji" od 10 godina (ne smijemo brisati izvještaje za aktivne slučajeve, i za slučajeve koji su završili pred manje od 10 godina)
+# 7. Napiši triger koji će zabraniti brisanje bilo kojeg izvještaja kreiranog za slučajeve koji nisu završeni (završetak je NULL), ili im je završetak "noviji" od 10 godina (ne smijemo brisati izvještaje za aktivne slučajeve, i za slučajeve koji su završili pred manje od 10 godina)
 DELIMITER //
 CREATE TRIGGER bd_izvjestaj
 BEFORE DELETE ON Izvjestaji
@@ -134,7 +135,7 @@ END;
 //
 DELIMITER ;
 
-# Triger koji osigurava da pri unosu spola osobe možemo staviti samo muški ili ženski spol
+# 8. Triger koji osigurava da pri unosu spola osobe možemo staviti samo muški ili ženski spol
 DELIMITER //
 CREATE TRIGGER bi_osoba
 BEFORE INSERT ON Osoba
@@ -158,7 +159,7 @@ END;
 //
 DELIMITER ;
 
-# Triger koji kreira stupac Ukupna_vrijednost_zapljena u tablici slučaj i ažurira ga nakon svake nove unesene zapljene u tom slučaju
+# 9. Triger koji kreira stupac Ukupna_vrijednost_zapljena u tablici slučaj i ažurira ga nakon svake nove unesene zapljene u tom slučaju
 DELIMITER //
 CREATE TRIGGER ai_zapljena
 AFTER INSERT ON Zapljene
@@ -177,13 +178,13 @@ END;
 //
 DELIMITER ;
 
-# Triger koji premješta završene slučajeve iz tablice slučaj u tablicu arhiva
+# 10. Triger koji premješta završene slučajeve iz tablice slučaj u tablicu arhiva
 DELIMITER //
 CREATE TRIGGER au_slucaj_arhiva
 AFTER UPDATE ON Slucaj
 FOR EACH ROW
 BEGIN
-    IF NEW.Status = 'Završeno' THEN
+    IF NEW.Status = 'Riješen' THEN
         INSERT INTO Arhiva (id_slucaj) VALUES (OLD.ID);
         DELETE FROM Slucaj WHERE ID = OLD.ID;
     END IF;
@@ -195,7 +196,7 @@ CREATE TEMPORARY TABLE Arhiva(
 id_slucaj FOREIGN KEY REFERENCES slucaj(id)
 	):
 
-# Provjera da osoba nije nadređena sama sebi
+# 11. Provjera da osoba nije nadređena sama sebi
 DELIMITER //
 CREATE TRIGGER bi_zaposlenik
 BEFORE INSERT ON Zaposlenik
@@ -209,7 +210,7 @@ END;
 //
 DELIMITER ;
 
-# Provjera da su datum početka i završetka slučaja različiti i da je datum završetka "veći" od datuma početka
+# 12. Provjera da su datum početka i završetka slučaja različiti i da je datum završetka "veći" od datuma početka
 DELIMITER //
 
 CREATE TRIGGER bi_slucaj
@@ -225,6 +226,7 @@ END;
 DELIMITER ;
 
 
+# 13. Napravi triger koji će umiroviti psa ako je njegova godina rođenja ažurirana na način da je dob psa 10 ili veća
 DELIMITER //
 
 CREATE TRIGGER bu_pas
@@ -240,7 +242,7 @@ END;
 //
 DELIMITER ;
 
-# Napravi triger koji će, u slučaju da je pas časno umirovljen koristeći triger (ili ručno), onemogućiti da ga koristimo u novim slučajevima
+# 14. Napravi triger koji će, u slučaju da je pas časno umirovljen koristeći triger (ili ručno), onemogućiti da ga koristimo u novim slučajevima
 DELIMITER //
 CREATE TRIGGER bi_slucaj_pas
 BEFORE INSERT ON Slucaj
@@ -257,7 +259,7 @@ END;
 //
 DELIMITER ;
 
-# Napiši triger koji će, u slučaju da je osoba mlađa od 18 godina (godina današnjeg datuma - godina rođenja daju broj manji od 18), pri dodavanju te osobe u slučaj dodati poseban stupac s napomenom: Počinitelj je maloljetan - slučaj nije otvoren za javnost
+# 15. Napiši triger koji će, u slučaju da je osoba mlađa od 18 godina (godina današnjeg datuma - godina rođenja daju broj manji od 18), pri dodavanju te osobe u slučaj dodati poseban stupac s napomenom: Počinitelj je maloljetan - slučaj nije otvoren za javnost
 ALTER TABLE Slucaj
 ADD COLUMN Napomena VARCHAR(255);
 
@@ -288,7 +290,7 @@ END //
 
 DELIMITER ;
 
-# Napravi triger koji će onemogućiti da maloljetnik bude vlasnik vozila
+# 16. Napravi triger koji će onemogućiti da maloljetnik bude vlasnik vozila
 DELIMITER //
 CREATE TRIGGER bi_vozilo_punoljetnost
 BEFORE INSERT ON Vozilo FOR EACH ROW
@@ -305,7 +307,7 @@ END;
 DELIMITER ;
 
 
-# Napravi triger koji će u slučaju da postavljamo status slučaja na završeno, postaviti datum završetka na današnji ako mi eksplicitno ne navedemo neki drugi datum, ali će dozvoliti da ga izmjenimo ako želimo
+# 17. Napravi triger koji će u slučaju da postavljamo status slučaja na završeno, postaviti datum završetka na današnji ako mi eksplicitno ne navedemo neki drugi datum, ali će dozvoliti da ga izmjenimo ako želimo
 DELIMITER //
 
 CREATE TRIGGER bu_slucaj
@@ -320,7 +322,7 @@ END;
 DELIMITER ;
 
 
--- Triger koji će prije unosa provjeravati jesu li u slučaju počinitelj i svjedok različite osobe. 
+-- 18. Triger koji će prije unosa provjeravati jesu li u slučaju počinitelj i svjedok različite osobe. 
 
 DELIMITER //
 CREATE TRIGGER bi_slucaj
@@ -336,7 +338,7 @@ END IF;
 END//
 DELIMITER ;
  
--- Triger koji provjerava je li email dobre strukture
+-- 19. Triger koji provjerava je li email dobre strukture
 DELIMITER //
 CREATE TRIGGER bi_osoba
 BEFORE INSERT ON osoba
@@ -349,7 +351,7 @@ END IF;
 END//
 DELIMITER ;
 
--- Triger koji će ograničiti da isti zaposlenik ne smije istovremeno voditi više od 5 aktivnih slučajeva kako ne bi bio preopterećen
+-- 20. Triger koji će ograničiti da isti zaposlenik ne smije istovremeno voditi više od 5 aktivnih slučajeva kako ne bi bio preopterećen
 DELIMITER //
 
 CREATE TRIGGER Ogranicenje_broja_slucajeva
@@ -367,7 +369,4 @@ BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Zaposlenik ne može voditi više od 5 aktvnih slučajeva istovremeno kako ne bi bio preopterećen.';
     END IF;
-END //
-
-
-
+END // 
